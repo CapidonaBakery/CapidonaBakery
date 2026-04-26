@@ -2664,7 +2664,7 @@ async function loadRemoteConfig() {
       const paymentMethod = state.checkout.paymentMethod;
       const message = [
         orderNumber
-          ? `Hola, quiero confirmar mi capipedido, el número es ${orderNumber}.`
+          ? `Hola, quiero confirmar mi capipedido ${orderNumber}.`
           : "Hola, quiero confirmar mi capipedido.",
         paymentMethod === "transfer" ? "Adjunto el pago." : ""
       ].filter(Boolean).join("\n");
@@ -2756,23 +2756,26 @@ async function loadRemoteConfig() {
        12. INICIALIZACIÓN
        ========================================================= */
     async function init() {
-  // 1. Renderiza inmediatamente con la configuración local.
+  const cachedConfig = loadRemoteConfigCache();
+
+  if (cachedConfig) {
+    normalizeRemoteConfig(cachedConfig);
+    console.log("CAPIDONA: configuración previa cargada desde caché.");
+  }
+
   renderAll();
 
-  // 2. Luego intenta cargar la configuración remota desde Sheets.
   if (CONFIG.integrations.sheetsEnabled && CONFIG.integrations.configEndpoint) {
-    try {
-      await loadRemoteConfig();
+    const remoteConfig = await loadRemoteConfig();
 
-      // 3. Si Sheets responde, vuelve a renderizar con datos actualizados.
+    if (remoteConfig) {
       renderAll();
-
-      console.log("CAPIDONA: configuración remota aplicada correctamente.");
-    } catch (error) {
-      console.warn("CAPIDONA: no se pudo aplicar configuración remota.", error);
+      console.log("CAPIDONA: configuración actualizada desde Sheets.");
     }
   }
 }
+
+init();
 
     init();
   </script>
