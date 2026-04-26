@@ -1822,8 +1822,29 @@
     /* =========================================================
        5. CONFIGURACIÓN REMOTA / SHEETS
        ========================================================= */
-   async function loadRemoteConfig() {
-  if (!CONFIG.integrations.sheetsEnabled || !CONFIG.integrations.configEndpoint) return;
+ const CONFIG_CACHE_KEY = "CAPIDONA_LAST_REMOTE_CONFIG";
+
+function saveRemoteConfigCache(configData) {
+  try {
+    localStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify(configData));
+  } catch (error) {
+    console.warn("CAPIDONA: no se pudo guardar caché de configuración.", error);
+  }
+}
+
+function loadRemoteConfigCache() {
+  try {
+    const cached = localStorage.getItem(CONFIG_CACHE_KEY);
+    if (!cached) return null;
+    return JSON.parse(cached);
+  } catch (error) {
+    console.warn("CAPIDONA: no se pudo leer caché de configuración.", error);
+    return null;
+  }
+}
+
+async function loadRemoteConfig() {
+  if (!CONFIG.integrations.sheetsEnabled || !CONFIG.integrations.configEndpoint) return null;
 
   try {
     const url = `${CONFIG.integrations.configEndpoint}?action=config&t=${Date.now()}`;
@@ -1842,11 +1863,15 @@
     const configData = remote.data || remote;
 
     normalizeRemoteConfig(configData);
+    saveRemoteConfigCache(configData);
 
-    console.log("CAPIDONA: configuración remota cargada correctamente.");
+    console.log("CAPIDONA: configuración remota cargada y guardada correctamente.");
+
+    return configData;
 
   } catch (error) {
-    console.warn("CAPIDONA: usando configuración local por defecto.", error);
+    console.warn("CAPIDONA: usando configuración previa o local por defecto.", error);
+    return null;
   }
 }
 
