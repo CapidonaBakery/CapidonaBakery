@@ -1167,9 +1167,9 @@
        AJUSTE QUIRÚRGICO DE PRESENTACIÓN SUPERIOR
        ========================= */
     :root {
-      --header-h: 148px;
-      --cart-h: 80px;
-    }
+  --header-h: 180px;
+  --cart-h: 80px;
+}
 
     .topbar {
       height: var(--header-h);
@@ -1178,23 +1178,23 @@
     }
 
     .brand-showcase {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-    }
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
 
     .brand-row {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      gap: 18px;
-    }
-
-    .brand-logo {
-      width: 92px;
-      height: 92px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 14px;
+}
+  
+   .brand-logo {
+  width: 116px;
+  height: 116px;
       border: 0;
       background: transparent;
       box-shadow: none;
@@ -1208,26 +1208,28 @@
       object-fit: contain;
     }
 
-    .slogan-pill {
-      width: auto;
-      max-width: 190px;
-      min-height: 46px;
-      padding: 9px 14px;
+   .slogan-pill {
+  width: auto;
+  max-width: 210px;
+  min-height: 52px;
+  padding: 9px 13px;
       display: flex;
       align-items: center;
       justify-content: center;
       align-self: center;
       text-align: center;
-      font-size: .88rem;
+      font-size: .86rem;
       line-height: 1.15;
     }
 
     .brand-name {
-      margin: -6px 0 0 3px;
-      font-size: 1.62rem;
-      line-height: .98;
-      letter-spacing: .045em;
-    }
+  margin: 0 auto 8px;
+  font-size: 2rem;
+  line-height: 1;
+  letter-spacing: .045em;
+  text-align: center;
+  width: 100%;
+}
 
     .brand-guide {
       margin: 6px 0 0 3px;
