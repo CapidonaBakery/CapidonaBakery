@@ -1,0 +1,2725 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>CAPIDONA | Sistema de pedidos</title>
+  <meta name="description" content="Sistema de pedidos CAPIDONA - un capricho dulce y gordito" />
+  <style>
+    :root {
+      --bg: #f7efe6;
+      --bg-soft: #fff9f5;
+      --surface: #fffaf7;
+      --surface-2: #fff2ec;
+      --surface-3: #f6ece6;
+      --line: #ead9d1;
+      --line-strong: #d8bbb0;
+      --text: #251c18;
+      --muted: #6e5d56;
+      --pink: #d99aa3;
+      --pink-strong: #c97f8b;
+      --brown: #7b5243;
+      --brown-strong: #5f3d32;
+      --black: #161311;
+      --success: #2d7a54;
+      --success-bg: #edf8f1;
+      --warn: #8d5a24;
+      --warn-bg: #fff5e8;
+      --danger: #9f4c4c;
+      --danger-bg: #fff0f0;
+      --shadow-soft: 0 10px 30px rgba(95, 61, 50, 0.08);
+      --shadow-card: 0 10px 26px rgba(95, 61, 50, 0.11);
+      --shadow-dark: 0 18px 34px rgba(22, 19, 17, 0.28);
+      --radius-xl: 26px;
+      --radius-lg: 20px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --header-h: 84px;
+      --cart-h: 92px;
+      --touch: 48px;
+      --transition: 180ms ease;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(217, 154, 163, 0.18), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(123, 82, 67, 0.10), transparent 28%),
+        linear-gradient(180deg, #fcf8f4 0%, var(--bg) 100%);
+      color: var(--text);
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    img { display: block; max-width: 100%; }
+    button, input { font: inherit; color: inherit; }
+    button { border: 0; background: transparent; }
+
+    .hidden { display: none !important; }
+
+    .app {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      height: 100dvh;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      transition: transform .26s ease, opacity .2s ease;
+      background: transparent;
+    }
+
+    /* =========================
+       MAIN
+       ========================= */
+    .screen-main {
+      display: flex;
+      flex-direction: column;
+      padding-bottom: calc(var(--cart-h) + 14px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .topbar {
+      height: var(--header-h);
+      padding: 14px 16px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      position: relative;
+      z-index: 12;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-logo {
+      width: 54px;
+      height: 54px;
+      overflow: hidden;
+      border-radius: 18px;
+      background: #fff;
+      border: 1px solid rgba(255,255,255,.85);
+      box-shadow: var(--shadow-soft);
+      flex: 0 0 auto;
+    }
+
+    .brand-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .brand-name {
+      margin: 0;
+      font-size: 1.1rem;
+      line-height: 1;
+      letter-spacing: .02em;
+      font-weight: 900;
+      color: var(--brown-strong);
+    }
+
+    .slogan-pill {
+      max-width: 148px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.72);
+      border: 1px solid rgba(255,255,255,.9);
+      box-shadow: var(--shadow-soft);
+      font-size: .75rem;
+      line-height: 1.12;
+      font-weight: 800;
+      color: var(--brown-strong);
+      text-align: right;
+      flex: 0 0 auto;
+    }
+
+    .main-body {
+      height: calc(100dvh - var(--header-h) - var(--cart-h) - env(safe-area-inset-bottom, 0px));
+      padding: 8px 0 10px;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .catalog-rail {
+      width: 100%;
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 0 16px 6px;
+      scroll-snap-type: x proximity;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .catalog-rail::-webkit-scrollbar,
+    .scroll-row::-webkit-scrollbar,
+    .step-content::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+
+    .catalog-rail::-webkit-scrollbar-thumb,
+    .scroll-row::-webkit-scrollbar-thumb,
+    .step-content::-webkit-scrollbar-thumb {
+      background: rgba(123, 82, 67, 0.20);
+      border-radius: 999px;
+    }
+
+    .product-card {
+      min-width: 212px;
+      width: 212px;
+      background: rgba(255,255,255,.74);
+      border: 1px solid rgba(255,255,255,.86);
+      box-shadow: var(--shadow-card);
+      border-radius: 24px;
+      overflow: hidden;
+      flex: 0 0 auto;
+      scroll-snap-align: start;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .product-card.teaser {
+      background: linear-gradient(180deg, rgba(37,28,24,.92) 0%, rgba(50,39,33,.96) 100%);
+      border-color: rgba(255,255,255,.08);
+      color: #f5ece6;
+    }
+
+    .product-open {
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .product-media {
+      aspect-ratio: 1 / 1;
+      position: relative;
+      background: var(--surface-2);
+      overflow: hidden;
+    }
+
+    .product-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .product-card.teaser .product-media {
+      background: radial-gradient(circle at top, rgba(255,255,255,.08), transparent 36%), linear-gradient(180deg, #2a201d 0%, #1a1412 100%);
+      display: grid;
+      place-items: center;
+    }
+
+    .teaser-mark {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      font-size: 2rem;
+      font-weight: 800;
+      color: rgba(255,255,255,.72);
+    }
+
+    .product-info {
+      padding: 10px 12px 8px;
+    }
+
+    .product-name {
+      margin: 0;
+      font-size: .97rem;
+      line-height: 1.16;
+      font-weight: 800;
+      letter-spacing: .01em;
+      color: var(--brown-strong);
+    }
+
+    .product-card.teaser .product-name { color: #f7efea; }
+
+    .status-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(37,28,24,.78);
+      color: #fff;
+      font-size: .66rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      backdrop-filter: blur(8px);
+    }
+
+    .product-controls,
+    .product-foot {
+      padding: 0 12px 12px;
+      margin-top: auto;
+    }
+
+    .stepper {
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border-radius: 16px;
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      padding: 4px;
+    }
+
+    .stepper-btn,
+    .mini-btn,
+    .icon-btn,
+    .ghost-btn,
+    .primary-btn,
+    .top-action,
+    .ghost-soft,
+    .primary-wide,
+    .copy-btn,
+    .select-card {
+      cursor: pointer;
+      transition: transform var(--transition), opacity var(--transition), background var(--transition), border-color var(--transition);
+    }
+
+    .stepper-btn:active,
+    .mini-btn:active,
+    .icon-btn:active,
+    .ghost-btn:active,
+    .primary-btn:active,
+    .top-action:active,
+    .ghost-soft:active,
+    .primary-wide:active,
+    .copy-btn:active,
+    .select-card:active,
+    .date-chip:active,
+    .product-open:active {
+      transform: scale(.98);
+    }
+
+    .stepper-btn {
+      width: var(--touch);
+      height: var(--touch);
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #fff;
+      display: grid;
+      place-items: center;
+      font-size: 1.35rem;
+      font-weight: 800;
+    }
+
+    .stepper-value {
+      min-width: 44px;
+      padding: 0 6px;
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 900;
+      color: var(--brown-strong);
+    }
+
+    .soon-pill,
+    .teaser-pill {
+      min-height: 56px;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 16px;
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+    }
+
+    .soon-pill {
+      background: rgba(217,154,163,.16);
+      border: 1px solid rgba(217,154,163,.30);
+      color: var(--brown-strong);
+    }
+
+    .teaser-pill {
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      color: rgba(255,255,255,.74);
+    }
+
+    /* =========================
+       CART BAR
+       ========================= */
+    .cart-bar {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+      z-index: 15;
+      background: rgba(37,28,24,.94);
+      color: #fffaf8;
+      border-radius: 24px;
+      box-shadow: var(--shadow-dark);
+      overflow: hidden;
+    }
+
+    .cart-inner {
+      min-height: var(--cart-h);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+    }
+
+    .cart-summary {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .cart-label {
+      margin-bottom: 2px;
+      font-size: .74rem;
+      opacity: .74;
+    }
+
+    .cart-main {
+      margin-bottom: 2px;
+      font-size: .98rem;
+      line-height: 1.15;
+      font-weight: 900;
+    }
+
+    .cart-sub {
+      font-size: .8rem;
+      opacity: .82;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cart-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .ghost-btn,
+    .primary-btn {
+      min-height: var(--touch);
+      padding: 0 14px;
+      border-radius: 14px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .ghost-btn {
+      background: rgba(255,255,255,.12);
+      color: #fff;
+    }
+
+    .primary-btn,
+    .primary-wide {
+      background: linear-gradient(180deg, #efb0b9 0%, var(--pink-strong) 100%);
+      color: #fff;
+      box-shadow: 0 10px 22px rgba(201,127,139,.26);
+    }
+
+    .primary-btn[disabled],
+    .ghost-btn[disabled],
+    .stepper-btn[disabled],
+    .mini-btn[disabled],
+    .copy-btn[disabled],
+    .primary-wide[disabled] {
+      opacity: .5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* =========================
+       SHEETS
+       ========================= */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 40;
+      background: rgba(22,19,17,.18);
+      backdrop-filter: blur(8px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease;
+    }
+
+    .overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .sheet {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+      z-index: 45;
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,.92);
+      border-radius: 28px;
+      box-shadow: 0 24px 50px rgba(22,19,17,.24);
+      transform: translateY(24px);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform .22s ease, opacity .2s ease;
+      overflow: hidden;
+      max-height: calc(100dvh - 120px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sheet.active {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .sheet-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 14px 16px 10px;
+      flex: 0 0 auto;
+    }
+
+    .sheet-title {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 900;
+      color: var(--brown-strong);
+    }
+
+    .icon-btn,
+    .mini-btn,
+    .copy-btn {
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--brown-strong);
+      font-weight: 800;
+    }
+
+    .icon-btn,
+    .mini-btn { width: 40px; height: 40px; display: grid; place-items: center; }
+    .icon-btn { font-size: 1.15rem; }
+    .mini-btn { font-size: 1rem; }
+
+    .detail-body,
+    .cart-sheet-body {
+      padding: 0 16px 16px;
+      overflow-y: auto;
+    }
+
+    .detail-image {
+      margin-bottom: 14px;
+      border-radius: 22px;
+      overflow: hidden;
+      aspect-ratio: 1.18 / 1;
+      background: var(--surface-2);
+    }
+
+    .detail-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .price-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      padding: 0 12px;
+      border-radius: 999px;
+      background: rgba(217,154,163,.16);
+      color: var(--brown-strong);
+      font-size: .9rem;
+      font-weight: 900;
+      margin: 8px 0 10px;
+    }
+
+    .detail-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.42;
+    }
+
+    .detail-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 12px;
+    }
+
+    .meta-chip,
+    .flavor-chip {
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--bg-soft);
+      color: var(--brown-strong);
+      display: flex;
+      align-items: center;
+      font-size: .83rem;
+      font-weight: 800;
+    }
+
+    .flavor-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .cart-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .cart-line:first-child {
+      padding-top: 2px;
+      border-top: 0;
+    }
+
+    .cart-line strong {
+      display: block;
+      font-size: .95rem;
+      color: var(--brown-strong);
+    }
+
+    .cart-line span {
+      display: block;
+      margin-top: 2px;
+      font-size: .83rem;
+      color: var(--muted);
+    }
+
+    .line-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* =========================
+       CHECKOUT
+       ========================= */
+    .screen-checkout {
+      z-index: 20;
+      background:
+        radial-gradient(circle at top left, rgba(217,154,163,.16), transparent 28%),
+        linear-gradient(180deg, #fcf8f4 0%, var(--bg) 100%);
+      transform: translateX(100%);
+      opacity: 0;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .screen-checkout.active {
+      transform: translateX(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .checkout-top {
+      height: var(--header-h);
+      padding: 14px 16px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .top-action {
+      min-height: 42px;
+      padding: 0 12px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.76);
+      color: var(--brown-strong);
+      font-size: .86rem;
+      font-weight: 800;
+    }
+
+    .checkout-top-spacer {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .checkout-body {
+      flex: 1 1 auto;
+      min-height: 0;
+      padding: 0 16px 16px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .step-panel {
+      flex: 1 1 auto;
+      min-height: 0;
+      background: rgba(255,255,255,.74);
+      border: 1px solid rgba(255,255,255,.86);
+      box-shadow: var(--shadow-card);
+      border-radius: 28px;
+      padding: 18px;
+      display: none;
+      overflow: hidden;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .step-panel.active { display: flex; }
+
+    .step-heading {
+      margin: 0;
+      font-size: 1.22rem;
+      line-height: 1.15;
+      color: var(--brown-strong);
+      font-weight: 900;
+    }
+
+    .step-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.4;
+    }
+
+    .step-content {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .scroll-row {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding-bottom: 4px;
+      scroll-snap-type: x proximity;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .date-chip,
+    .select-card {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 18px;
+    }
+
+    .date-chip {
+      min-width: 92px;
+      padding: 14px 10px;
+      text-align: center;
+      flex: 0 0 auto;
+      scroll-snap-align: start;
+      font-size: .87rem;
+      font-weight: 800;
+      color: var(--brown-strong);
+    }
+
+    .date-chip.active,
+    .select-card.active {
+      border-color: var(--pink-strong);
+      background: #fff2f5;
+      box-shadow: 0 0 0 3px rgba(201,127,139,.12);
+    }
+
+    .date-chip span { display: block; }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: .84rem;
+      font-weight: 800;
+      color: var(--brown-strong);
+    }
+
+    .input {
+      width: 100%;
+      min-height: 52px;
+      padding: 0 14px;
+      border-radius: 16px;
+      border: 1.5px solid var(--line);
+      background: #fff;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+
+    .input:focus {
+      border-color: var(--pink-strong);
+      box-shadow: 0 0 0 4px rgba(201,127,139,.12);
+    }
+
+    .helper-card,
+    .summary-card,
+    .bank-card,
+    .micro-status {
+      padding: 12px 14px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .helper-card { background: var(--bg-soft); }
+
+    .helper-card strong,
+    .summary-card strong,
+    .bank-card strong { color: var(--brown-strong); }
+
+    .helper-card p,
+    .summary-card p,
+    .bank-card p {
+      margin: 4px 0 0;
+      font-size: .84rem;
+      line-height: 1.4;
+      color: var(--muted);
+    }
+
+    .options-grid,
+    .bank-grid,
+    .summary-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .select-card {
+      min-height: 70px;
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .select-card strong {
+      display: block;
+      font-size: .95rem;
+      color: var(--brown-strong);
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: .88rem;
+      color: var(--text);
+    }
+
+    .summary-row .key { color: var(--muted); }
+
+    .summary-row.total {
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+      font-weight: 900;
+      font-size: .96rem;
+      color: var(--brown-strong);
+    }
+
+    .copy-btn {
+      min-height: 40px;
+      margin-top: 10px;
+      padding: 0 12px;
+      color: var(--brown-strong);
+    }
+
+    .micro-status {
+      display: none;
+      font-size: .84rem;
+      line-height: 1.35;
+    }
+
+    .micro-status.show { display: block; }
+    .micro-status.info { background: var(--warn-bg); color: var(--warn); border-color: #efd2ad; }
+    .micro-status.error { background: var(--danger-bg); color: var(--danger); border-color: #efcaca; }
+    .micro-status.success { background: var(--success-bg); color: var(--success); border-color: #cfe6d8; }
+
+    .checkout-footer {
+      display: flex;
+      gap: 10px;
+      padding-top: 8px;
+      flex: 0 0 auto;
+    }
+
+    .ghost-soft,
+    .primary-wide {
+      min-height: 52px;
+      border-radius: 16px;
+      font-weight: 900;
+    }
+
+    .ghost-soft {
+      flex: 1 1 auto;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.76);
+      color: var(--brown-strong);
+    }
+
+    .primary-wide { flex: 2 1 auto; }
+
+    /* =========================
+       TOAST
+       ========================= */
+    .toast {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      top: calc(8px + env(safe-area-inset-top, 0px));
+      z-index: 90;
+      padding: 12px 14px;
+      border-radius: 16px;
+      box-shadow: var(--shadow-card);
+      border: 1px solid transparent;
+      opacity: 0;
+      transform: translateY(-8px);
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+      font-size: .86rem;
+      line-height: 1.35;
+    }
+
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.info { background: var(--warn-bg); color: var(--warn); border-color: #efd2ad; }
+    .toast.success { background: var(--success-bg); color: var(--success); border-color: #cfe6d8; }
+    .toast.error { background: var(--danger-bg); color: var(--danger); border-color: #efcaca; }
+
+    @media (min-width: 440px) {
+      .brand-name { font-size: 1.16rem; }
+      .product-card { min-width: 220px; width: 220px; }
+    }
+  
+
+    /* =========================
+       AJUSTES QUIRÚRGICOS FINAL
+       ========================= */
+    .brand-logo {
+      width: 62px;
+      height: 62px;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      border-radius: 0;
+    }
+
+    .brand-name {
+      font-size: 1.34rem;
+      letter-spacing: .035em;
+    }
+
+    .slogan-pill {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      min-height: 48px;
+    }
+
+    .brand-guide {
+      margin: -4px 16px 6px;
+      padding: 10px 13px;
+      border-radius: 18px;
+      background: rgba(255,255,255,.64);
+      border: 1px solid rgba(255,255,255,.86);
+      box-shadow: var(--shadow-soft);
+      color: var(--muted);
+      font-size: .84rem;
+      line-height: 1.28;
+      font-weight: 700;
+    }
+
+    .checkout-brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+
+    .checkout-brand img {
+      width: 34px;
+      height: 34px;
+      object-fit: contain;
+    }
+
+    .checkout-brand strong {
+      font-size: .98rem;
+      letter-spacing: .04em;
+      color: var(--brown-strong);
+      font-weight: 900;
+    }
+
+    .section-label {
+      margin: 0;
+      font-size: 1rem;
+      line-height: 1.15;
+      color: var(--brown-strong);
+      font-weight: 900;
+    }
+
+    .detail-description {
+      margin: 2px 0 8px;
+      color: var(--brown-strong);
+      font-size: .98rem;
+      line-height: 1.36;
+      font-weight: 850;
+    }
+
+    .detail-price-text {
+      margin: 0;
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.25;
+      font-weight: 800;
+    }
+
+    .product-mini-summary {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .product-mini-summary img {
+      width: 58px;
+      height: 58px;
+      border-radius: 14px;
+      object-fit: cover;
+      background: var(--surface-2);
+      flex: 0 0 auto;
+    }
+
+    .product-mini-summary strong {
+      display: block;
+      color: var(--brown-strong);
+      font-size: .92rem;
+      line-height: 1.15;
+    }
+
+    .product-mini-summary span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: .82rem;
+      line-height: 1.25;
+    }
+
+    .textarea {
+      width: 100%;
+      min-height: 88px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1.5px solid var(--line);
+      background: #fff;
+      outline: none;
+      resize: vertical;
+      font: inherit;
+      color: inherit;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+
+    .textarea:focus {
+      border-color: var(--pink-strong);
+      box-shadow: 0 0 0 4px rgba(201,127,139,.12);
+    }
+
+    .field-help {
+      margin: -2px 0 0;
+      font-size: .78rem;
+      line-height: 1.32;
+      color: var(--muted);
+    }
+
+    .single-slot-note {
+      display: none;
+    }
+
+    .single-slot-note.show {
+      display: block;
+    }
+
+    .primary-wide.ready,
+    .primary-btn.ready {
+      filter: saturate(1.08) brightness(1.02);
+    }
+
+    .primary-wide[disabled],
+    .primary-btn[disabled] {
+      opacity: .42;
+      filter: saturate(.85);
+    }
+
+    .screen-thanks {
+      z-index: 30;
+      background:
+        radial-gradient(circle at top left, rgba(217,154,163,.16), transparent 28%),
+        linear-gradient(180deg, #fcf8f4 0%, var(--bg) 100%);
+      transform: translateX(100%);
+      opacity: 0;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+    }
+
+    .screen-thanks.active {
+      transform: translateX(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .thanks-card {
+      margin: auto 0;
+      padding: 22px;
+      border-radius: 28px;
+      background: rgba(255,255,255,.78);
+      border: 1px solid rgba(255,255,255,.86);
+      box-shadow: var(--shadow-card);
+      text-align: center;
+    }
+
+    .thanks-card img {
+      width: 68px;
+      height: 68px;
+      object-fit: contain;
+      margin: 0 auto 12px;
+    }
+
+    .thanks-card h2 {
+      margin: 0 0 8px;
+      color: var(--brown-strong);
+      font-size: 1.22rem;
+      font-weight: 900;
+    }
+
+    .thanks-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: .92rem;
+      line-height: 1.42;
+    }
+
+    .thanks-footer {
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px));
+    }
+
+    .image-fallback {
+      width: 100%;
+      height: 100%;
+      min-height: 120px;
+      display: grid;
+      place-items: center;
+      color: var(--brown-strong);
+      background: var(--surface-2);
+      font-weight: 900;
+      text-align: center;
+      padding: 12px;
+    }
+
+    @media (min-width: 440px) {
+      .brand-logo { width: 66px; height: 66px; }
+      .brand-name { font-size: 1.42rem; }
+    }
+
+
+    /* =========================
+       AJUSTE QUIRÚRGICO DE PRESENTACIÓN SUPERIOR
+       ========================= */
+    :root {
+      --header-h: 148px;
+      --cart-h: 80px;
+    }
+
+    .topbar {
+      height: var(--header-h);
+      padding: 12px 16px 8px;
+      display: block;
+    }
+
+    .brand-showcase {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .brand-row {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 18px;
+    }
+
+    .brand-logo {
+      width: 92px;
+      height: 92px;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      border-radius: 0;
+      overflow: visible;
+    }
+
+    .brand-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .slogan-pill {
+      width: auto;
+      max-width: 190px;
+      min-height: 46px;
+      padding: 9px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      align-self: center;
+      text-align: center;
+      font-size: .88rem;
+      line-height: 1.15;
+    }
+
+    .brand-name {
+      margin: -6px 0 0 3px;
+      font-size: 1.62rem;
+      line-height: .98;
+      letter-spacing: .045em;
+    }
+
+    .brand-guide {
+      margin: 6px 0 0 3px;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      color: var(--muted);
+      font-size: .88rem;
+      line-height: 1.25;
+      font-weight: 750;
+    }
+
+    .cart-bar {
+      border-radius: 22px;
+    }
+
+    .cart-inner {
+      min-height: var(--cart-h);
+      padding: 8px 10px;
+      gap: 10px;
+    }
+
+    .cart-label {
+      margin-bottom: 1px;
+      font-size: .7rem;
+    }
+
+    .cart-main {
+      margin-bottom: 1px;
+      font-size: .94rem;
+    }
+
+    .cart-sub {
+      font-size: .76rem;
+    }
+
+    .cart-actions {
+      gap: 6px;
+    }
+
+    .cart-actions .ghost-btn,
+    .cart-actions .primary-btn {
+      min-height: 44px;
+      padding: 0 12px;
+      border-radius: 13px;
+      font-size: .86rem;
+    }
+
+    @media (min-width: 440px) {
+      .brand-logo { width: 96px; height: 96px; }
+      .brand-name { font-size: 1.72rem; }
+      .slogan-pill { min-height: 48px; font-size: .9rem; }
+    }
+
+
+    /* Mantener altura original del encabezado del checkout: no forma parte del ajuste visual principal. */
+    .screen-checkout .checkout-top {
+      height: 84px;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <section class="screen screen-main" id="mainScreen" aria-label="Pantalla principal">
+      <header class="topbar">
+        <div class="brand-showcase">
+          <div class="brand-row">
+            <div class="brand-logo">
+              <img src="Logo Capidona.png" alt="Logo de CAPIDONA" />
+            </div>
+            <div class="slogan-pill">un capricho dulce y gordito</div>
+          </div>
+          <h1 class="brand-name">CAPIDONA</h1>
+          <p class="brand-guide">Elige tu producto y solicita tu pedido ágilmente.</p>
+        </div>
+      </header>
+
+      <div class="main-body">
+        <div class="catalog-rail" id="catalog"></div>
+      </div>
+
+      <div class="cart-bar" aria-label="Carrito fijo">
+        <div class="cart-inner">
+          <div class="cart-summary">
+            <div class="cart-label">Carrito</div>
+            <div class="cart-main" id="cartMain">0 cajas · USD 0.00</div>
+            <div class="cart-sub" id="cartSub">Añade tus galletas para continuar</div>
+          </div>
+          <div class="cart-actions">
+            <button class="ghost-btn" id="openCartBtn" type="button">Ver</button>
+            <button class="primary-btn" id="checkoutBtn" type="button">Finalizar pedido</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen screen-checkout" id="checkoutScreen" aria-label="Flujo de checkout">
+      <header class="checkout-top">
+        <button class="top-action" id="backBtn" type="button">Retroceder</button>
+        <div class="checkout-brand" aria-label="CAPIDONA">
+          <img src="Logo Capidona.png" alt="Logo de CAPIDONA" />
+          <strong>CAPIDONA</strong>
+        </div>
+        <button class="top-action" id="cancelBtn" type="button">Cancelar</button>
+      </header>
+
+      <div class="checkout-body">
+        <section class="step-panel active" data-step="1">
+          <div class="step-content">
+            <div class="field">
+              <h2 class="section-label">Nombre y apellido</h2>
+              <input class="input" id="customerName" type="text" autocomplete="name" />
+            </div>
+
+            <div class="field">
+              <h2 class="section-label">Fecha</h2>
+              <p class="step-copy">Selecciona la fecha de entrega o retiro de tu pedido.</p>
+              <div class="scroll-row" id="dateOptions"></div>
+              <p class="field-help" id="blockedDatesHelp">Si no ves una fecha, puede estar fuera del rango disponible o ser un día sin atención.</p>
+            </div>
+
+            <div class="helper-card">
+              <strong>Pedido actual</strong>
+              <p id="dateStepSummary">1 caja de galletas rellenas</p>
+            </div>
+
+            <div class="micro-status" id="step1Status"></div>
+          </div>
+
+          <div class="checkout-footer">
+            <button class="ghost-soft" id="step1Cancel" type="button">Cancelar</button>
+            <button class="primary-wide" id="step1Next" type="button">Continuar</button>
+          </div>
+        </section>
+
+        <section class="step-panel" data-step="2">
+          <h2 class="step-heading">Franja horaria</h2>
+          <p class="step-copy">Selecciona la franja de hora en la que quieres tu pedido.</p>
+
+          <div class="step-content">
+            <div class="options-grid" id="slotOptions"></div>
+            <div class="micro-status" id="step2Status"></div>
+          </div>
+
+          <div class="checkout-footer">
+            <button class="ghost-soft" id="step2Back" type="button">Retroceder</button>
+            <button class="primary-wide" id="step2Next" type="button">Continuar</button>
+          </div>
+        </section>
+
+        <section class="step-panel" data-step="3">
+          <h2 class="step-heading">Modalidad de venta</h2>
+          <p class="step-copy">Selecciona entrega o retiro para tu pedido.</p>
+
+          <div class="step-content">
+            <div class="helper-card single-slot-note" id="singleSlotNotice"></div>
+            <div class="options-grid" id="modeOptions"></div>
+
+            <div class="field hidden" id="zoneFieldWrap">
+              <label for="deliveryZone">Lugar para entrega</label>
+              <input class="input" id="deliveryZone" type="text" placeholder="Barrio, zona o referencia breve" />
+              <p class="field-help">El valor del envío se confirma por WhatsApp según la zona.</p>
+            </div>
+
+            <div class="helper-card hidden" id="pickupNotice">
+              <strong>Retiro</strong>
+              <p>El punto de retiro se coordina por WhatsApp.</p>
+            </div>
+
+            <div class="micro-status" id="step3Status"></div>
+          </div>
+
+          <div class="checkout-footer">
+            <button class="ghost-soft" id="step3Back" type="button">Retroceder</button>
+            <button class="primary-wide" id="step3Next" type="button">Continuar</button>
+          </div>
+        </section>
+
+        <section class="step-panel" data-step="4">
+          <h2 class="step-heading">Método de pago y confirmación</h2>
+          <p class="step-copy">Selecciona tu método de pago.</p>
+
+          <div class="step-content">
+            <div class="product-mini-summary" id="finalProductSummary"></div>
+            <div class="options-grid" id="paymentOptions"></div>
+            <div class="bank-grid hidden" id="bankGrid"></div>
+
+            <div class="field">
+              <label for="orderNotes">Observaciones o comentarios</label>
+              <textarea class="textarea" id="orderNotes" placeholder="Opcional. Escríbenos aquí si necesitas aclarar algo importante sobre tu pedido."></textarea>
+              <p class="field-help">Opcional. No es necesario llenar este campo para confirmar.</p>
+            </div>
+
+            <div class="summary-card">
+              <strong>Resumen del pedido</strong>
+              <div class="summary-list" id="checkoutSummary"></div>
+            </div>
+
+            <div class="micro-status" id="step4Status"></div>
+          </div>
+
+          <div class="checkout-footer">
+            <button class="ghost-soft" id="step4Back" type="button">Retroceder</button>
+            <button class="primary-wide" id="confirmWhatsAppBtn" type="button">Confirmar por WhatsApp</button>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="screen screen-thanks" id="thanksScreen" aria-label="Pedido confirmado">
+      <div class="thanks-card">
+        <img src="Logo Capidona.png" alt="Logo de CAPIDONA" />
+        <h2>Gracias por tu pedido</h2>
+        <p>Te llevaremos a WhatsApp para finalizar la confirmación con CAPIDONA.</p>
+      </div>
+      <div class="thanks-footer">
+        <button class="primary-wide" id="newOrderBtn" type="button">Hacer otro pedido</button>
+      </div>
+    </section>
+
+    <div class="overlay" id="overlay"></div>
+
+    <section class="sheet" id="detailSheet" aria-label="Detalle del producto">
+      <div class="sheet-head">
+        <h3 class="sheet-title" id="detailTitle">Galletas rellenas</h3>
+        <button class="icon-btn" id="closeDetailBtn" type="button" aria-label="Cerrar detalle">×</button>
+      </div>
+      <div class="detail-body" id="detailBody"></div>
+    </section>
+
+    <section class="sheet" id="cartSheet" aria-label="Detalle del carrito">
+      <div class="sheet-head">
+        <h3 class="sheet-title">Tu carrito</h3>
+        <button class="icon-btn" id="closeCartBtn" type="button" aria-label="Cerrar carrito">×</button>
+      </div>
+      <div class="cart-sheet-body" id="cartSheetBody"></div>
+    </section>
+  </div>
+
+  <script>
+    /* =========================================================
+       1. CONFIGURACIÓN
+       ========================================================= */
+    const CONFIG = {
+      appVersion: "CAPIDONA_html_final_1.0",
+
+      business: {
+        name: "CAPIDONA",
+        slogan: "un capricho dulce y gordito",
+        city: "Manta, Ecuador",
+        currency: "USD"
+      },
+
+      contact: {
+        whatsappNumber: "593985711629"
+      },
+
+      integrations: {
+        sheetsEnabled: false,
+        configEndpoint: "", // Pegar aquí el endpoint GET de Apps Script para configuración.
+        ordersEndpoint: "", // Pegar aquí el endpoint POST de Apps Script para pedidos.
+        mode: "local"
+      },
+
+      limits: {
+        daysToShow: 10
+      },
+
+      messages: {
+        emptyCart: "Añade al menos una caja para continuar.",
+        invalidStep1: "Escribe tu nombre y elige una fecha disponible.",
+        invalidSlot: "Selecciona una franja para continuar.",
+        invalidMode: "Selecciona una modalidad para continuar.",
+        invalidZone: "Escribe tu barrio, zona o una referencia breve.",
+        invalidPayment: "Selecciona una forma de pago para continuar.",
+        copied: "Cuenta copiada.",
+        checkoutCanceled: "Regresaste al catálogo. Tu carrito sigue intacto.",
+        orderReady: "Pedido listo para confirmar por WhatsApp.",
+        orderLocalMode: "El registro en Sheets aún no está activado. Continuaremos por WhatsApp para la confirmación.",
+        orderSheetError: "No se pudo registrar en Sheets. Puedes continuar por WhatsApp y revisar el pedido manualmente.",
+        blockedDatesHelp: "Si no ves una fecha, puede estar fuera del rango disponible o ser un día sin atención."
+      },
+
+      blockedDates: [],
+
+      scheduleRules: [
+        {
+          weekday: 1,
+          dayName: "lunes",
+          active: true,
+          slots: [
+            { id: "mon_01", start: "10:00", end: "14:00", label: "10:00 am a 2:00 pm", cutoffType: "previous_day_time", cutoffDayOffset: -1, cutoffTime: "20:00" },
+            { id: "mon_02", start: "20:30", end: "22:00", label: "8:30 pm a 10:00 pm", cutoffType: "same_day_time", cutoffDayOffset: 0, cutoffTime: "18:00" }
+          ]
+        },
+        {
+          weekday: 2,
+          dayName: "martes",
+          active: true,
+          slots: [
+            { id: "tue_01", start: "10:00", end: "14:00", label: "10:00 am a 2:00 pm", cutoffType: "previous_day_time", cutoffDayOffset: -1, cutoffTime: "20:00" },
+            { id: "tue_02", start: "20:30", end: "22:00", label: "8:30 pm a 10:00 pm", cutoffType: "same_day_time", cutoffDayOffset: 0, cutoffTime: "18:00" }
+          ]
+        },
+        {
+          weekday: 3,
+          dayName: "miércoles",
+          active: true,
+          slots: [
+            { id: "wed_01", start: "10:00", end: "14:00", label: "10:00 am a 2:00 pm", cutoffType: "previous_day_time", cutoffDayOffset: -1, cutoffTime: "20:00" },
+            { id: "wed_02", start: "20:30", end: "22:00", label: "8:30 pm a 10:00 pm", cutoffType: "same_day_time", cutoffDayOffset: 0, cutoffTime: "18:00" }
+          ]
+        },
+        {
+          weekday: 4,
+          dayName: "jueves",
+          active: true,
+          slots: [
+            { id: "thu_01", start: "10:00", end: "14:00", label: "10:00 am a 2:00 pm", cutoffType: "previous_day_time", cutoffDayOffset: -1, cutoffTime: "20:00" },
+            { id: "thu_02", start: "20:30", end: "22:00", label: "8:30 pm a 10:00 pm", cutoffType: "same_day_time", cutoffDayOffset: 0, cutoffTime: "18:00" }
+          ]
+        },
+        {
+          weekday: 5,
+          dayName: "viernes",
+          active: true,
+          slots: [
+            { id: "fri_01", start: "10:00", end: "14:00", label: "10:00 am a 2:00 pm", cutoffType: "previous_day_time", cutoffDayOffset: -1, cutoffTime: "20:00" },
+            { id: "fri_02", start: "20:30", end: "22:00", label: "8:30 pm a 10:00 pm", cutoffType: "same_day_time", cutoffDayOffset: 0, cutoffTime: "18:00" }
+          ]
+        },
+        {
+          weekday: 6,
+          dayName: "sábado",
+          active: true,
+          slots: [
+            { id: "sat_01", start: "10:00", end: "19:00", label: "10:00 am a 7:00 pm", cutoffType: "previous_day_time", cutoffDayOffset: -1, cutoffTime: "20:00" }
+          ]
+        },
+        {
+          weekday: 0,
+          dayName: "domingo",
+          active: true,
+          slots: [
+            { id: "sun_01", start: "12:00", end: "17:00", label: "12:00 pm a 5:00 pm", cutoffType: "previous_day_time", cutoffDayOffset: -1, cutoffTime: "20:00" }
+          ]
+        }
+      ],
+
+      paymentMethods: [
+        { id: "cash", label: "Efectivo", active: true },
+        { id: "transfer", label: "Transferencia", active: true }
+      ],
+
+      banks: [
+        {
+          name: "Banco Pichincha",
+          holder: "Maholy Pico",
+          accountType: "Cuenta de ahorros",
+          accountNumber: "2214234712",
+          active: true
+        },
+        {
+          name: "Banco Guayaquil",
+          holder: "Maholy Pico",
+          accountType: "Cuenta de ahorros",
+          accountNumber: "0033167096",
+          active: true
+        }
+      ],
+
+      products: [
+        {
+          id: "cookies_box_6",
+          type: "active",
+          status: "active",
+          purchasable: true,
+          name: "Caja de 6 galletas rellenas",
+          shortName: "Galletas rellenas",
+          price: 6,
+          coverImage: "Portada Galletas.jpeg",
+          detailImage: "Detalle Galletas.jpeg",
+          description: "Caja de 6 galletas rellenas: 2 Oreo, 2 Manjar y 2 Nutella.",
+          order: 1
+        },
+        {
+          id: "carrot_cake",
+          type: "coming_soon",
+          status: "coming_soon",
+          purchasable: false,
+          name: "Torta de zanahoria",
+          shortName: "Torta de zanahoria",
+          price: 0,
+          coverImage: "Portada torta de zanahoria.jpeg",
+          detailImage: "Detalle torta de zanahoria.jpeg",
+          description: "Muy pronto en CAPIDONA.",
+          order: 2
+        },
+        {
+          id: "mystery_1",
+          type: "teaser",
+          status: "teaser",
+          purchasable: false,
+          name: "Muy pronto",
+          shortName: "Muy pronto",
+          order: 3
+        },
+        {
+          id: "mystery_2",
+          type: "teaser",
+          status: "teaser",
+          purchasable: false,
+          name: "Otra delicia",
+          shortName: "Otra delicia",
+          order: 4
+        }
+      ]
+    };
+
+    /* =========================================================
+       2. ESTADO
+       ========================================================= */
+    const state = {
+      view: "main",
+      activeStep: 1,
+      openSheet: null,
+      activeDetailProductId: "cookies_box_6",
+      lastOrderNumber: "",
+      cart: {
+        items: []
+      },
+      checkout: {
+        customerName: "",
+        dateKey: "",
+        dateLabel: "",
+        weekday: "",
+        availableSlots: [],
+        slotId: "",
+        slotLabel: "",
+        slotStart: "",
+        slotEnd: "",
+        mode: "",
+        zone: "",
+        paymentMethod: "",
+        notes: ""
+      }
+    };
+
+    /* =========================================================
+       3. SELECTORES
+       ========================================================= */
+    const $ = (selector) => document.querySelector(selector);
+    const $$ = (selector) => document.querySelectorAll(selector);
+
+    const el = {
+      mainScreen: $("#mainScreen"),
+      checkoutScreen: $("#checkoutScreen"),
+      thanksScreen: $("#thanksScreen"),
+      catalog: $("#catalog"),
+      cartMain: $("#cartMain"),
+      cartSub: $("#cartSub"),
+      checkoutBtn: $("#checkoutBtn"),
+      openCartBtn: $("#openCartBtn"),
+      cartSheetBody: $("#cartSheetBody"),
+      cartSheet: $("#cartSheet"),
+      detailSheet: $("#detailSheet"),
+      detailTitle: $("#detailTitle"),
+      detailBody: $("#detailBody"),
+      overlay: $("#overlay"),
+      toast: $("#toast"),
+      customerName: $("#customerName"),
+      dateOptions: $("#dateOptions"),
+      blockedDatesHelp: $("#blockedDatesHelp"),
+      slotOptions: $("#slotOptions"),
+      singleSlotNotice: $("#singleSlotNotice"),
+      modeOptions: $("#modeOptions"),
+      zoneFieldWrap: $("#zoneFieldWrap"),
+      deliveryZone: $("#deliveryZone"),
+      pickupNotice: $("#pickupNotice"),
+      paymentOptions: $("#paymentOptions"),
+      bankGrid: $("#bankGrid"),
+      checkoutSummary: $("#checkoutSummary"),
+      finalProductSummary: $("#finalProductSummary"),
+      dateStepSummary: $("#dateStepSummary"),
+      orderNotes: $("#orderNotes")
+    };
+
+    /* =========================================================
+       4. HELPERS
+       ========================================================= */
+    function money(value) {
+      return `${CONFIG.business.currency} ${Number(value || 0).toFixed(2)}`;
+    }
+
+    function clone(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function addDays(date, days) {
+      const copy = new Date(date);
+      copy.setDate(copy.getDate() + days);
+      return copy;
+    }
+
+    function todayBase() {
+      const now = new Date();
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    }
+
+    function toDateKey(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function dateFromKey(key) {
+      return new Date(`${key}T00:00:00`);
+    }
+
+    function setTimeOnDate(date, timeText) {
+      const [hour, minute] = String(timeText || "00:00").split(":").map(Number);
+      const copy = new Date(date);
+      copy.setHours(hour || 0, minute || 0, 0, 0);
+      return copy;
+    }
+
+    function formatChipDate(date) {
+      return date.toLocaleDateString("es-EC", {
+        weekday: "short",
+        day: "numeric",
+        month: "short"
+      }).replace(/\.$/, "");
+    }
+
+    function formatLongDate(date) {
+      return date.toLocaleDateString("es-EC", {
+        weekday: "long",
+        day: "numeric",
+        month: "long"
+      });
+    }
+
+    function weekdayName(date) {
+      return date.toLocaleDateString("es-EC", { weekday: "long" });
+    }
+
+    function showToast(message, type = "info") {
+      el.toast.textContent = message;
+      el.toast.className = `toast ${type} show`;
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => {
+        el.toast.className = "toast";
+      }, 2600);
+    }
+
+    function setStepStatus(step, message = "", type = "error") {
+      const box = document.getElementById(`step${step}Status`);
+      if (!box) return;
+      if (!message) {
+        box.className = "micro-status";
+        box.textContent = "";
+        return;
+      }
+      box.className = `micro-status ${type} show`;
+      box.textContent = message;
+    }
+
+    function resetCheckoutStatus() {
+      [1, 2, 3, 4].forEach(step => setStepStatus(step, ""));
+    }
+
+    function resolveImagePath(path) {
+      if (!path) return "";
+      const clean = String(path).trim();
+      if (/^(https?:)?\/\//i.test(clean) || clean.startsWith("data:")) return clean;
+      if (clean.startsWith("./") || clean.startsWith("/") || clean.startsWith("assets/")) return clean;
+      return clean;
+    }
+
+    function imageHtml(src, alt) {
+      const resolved = resolveImagePath(src);
+      if (!resolved) return `<div class="image-fallback">${alt || "CAPIDONA"}</div>`;
+      return `<img src="${resolved}" alt="${alt || "CAPIDONA"}" onerror="this.replaceWith(Object.assign(document.createElement('div'), {className:'image-fallback', textContent:'Imagen no disponible'}))" />`;
+    }
+
+    /* =========================================================
+       5. CONFIGURACIÓN REMOTA / SHEETS
+       ========================================================= */
+    async function loadRemoteConfig() {
+      if (!CONFIG.integrations.sheetsEnabled || !CONFIG.integrations.configEndpoint) return;
+      try {
+        const response = await fetch(CONFIG.integrations.configEndpoint, { method: "GET", cache: "no-store" });
+        if (!response.ok) throw new Error("No se pudo leer la configuración remota.");
+        const remote = await response.json();
+        normalizeRemoteConfig(remote);
+      } catch (error) {
+        console.warn("CAPIDONA: usando configuración local por defecto.", error);
+      }
+    }
+
+    function normalizeRemoteConfig(remote) {
+      if (!remote || typeof remote !== "object") return;
+      if (remote.business) Object.assign(CONFIG.business, remote.business);
+      if (remote.contact) Object.assign(CONFIG.contact, remote.contact);
+      if (Array.isArray(remote.products)) CONFIG.products = remote.products;
+      if (Array.isArray(remote.catalog)) CONFIG.products = remote.catalog;
+      if (Array.isArray(remote.scheduleRules)) CONFIG.scheduleRules = remote.scheduleRules;
+      if (Array.isArray(remote.blockedDates)) CONFIG.blockedDates = remote.blockedDates;
+      if (Array.isArray(remote.paymentMethods)) CONFIG.paymentMethods = remote.paymentMethods;
+      if (Array.isArray(remote.banks)) CONFIG.banks = remote.banks;
+    }
+
+    async function submitOrderToSheets(orderPayload) {
+      if (!CONFIG.integrations.sheetsEnabled || !CONFIG.integrations.ordersEndpoint) {
+        return { ok: false, mode: "local", orderNumber: "" };
+      }
+
+      try {
+        const response = await fetch(CONFIG.integrations.ordersEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(orderPayload)
+        });
+        if (!response.ok) throw new Error("Error al registrar el pedido.");
+        const result = await response.json();
+        return {
+          ok: Boolean(result.ok),
+          orderNumber: result.orderNumber || ""
+        };
+      } catch (error) {
+        console.warn("CAPIDONA: no se pudo registrar en Sheets.", error);
+        return { ok: false, mode: "error", orderNumber: "" };
+      }
+    }
+
+    /* =========================================================
+       6. PRODUCTOS Y CARRITO
+       ========================================================= */
+    function getSortedProducts() {
+      return clone(CONFIG.products)
+        .filter(product => product.status !== "hidden")
+        .sort((a, b) => Number(a.order || 99) - Number(b.order || 99));
+    }
+
+    function getProduct(productId) {
+      return CONFIG.products.find(product => product.id === productId) || CONFIG.products.find(product => product.purchasable);
+    }
+
+    function getPrimaryProduct() {
+      return CONFIG.products.find(product => product.purchasable) || CONFIG.products[0];
+    }
+
+    function getCartItem(productId) {
+      return state.cart.items.find(item => item.productId === productId);
+    }
+
+    function getCartQuantity(productId = null) {
+      if (productId) return getCartItem(productId)?.quantity || 0;
+      return state.cart.items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+    }
+
+    function getCartTotal() {
+      return state.cart.items.reduce((sum, item) => {
+        const product = getProduct(item.productId);
+        return sum + Number(item.quantity || 0) * Number(product?.price || item.unitPrice || 0);
+      }, 0);
+    }
+
+    function getCartLines() {
+      return state.cart.items.map(item => {
+        const product = getProduct(item.productId);
+        return {
+          ...item,
+          product,
+          quantity: Number(item.quantity || 0),
+          unitPrice: Number(product?.price || item.unitPrice || 0),
+          subtotal: Number(item.quantity || 0) * Number(product?.price || item.unitPrice || 0)
+        };
+      }).filter(line => line.quantity > 0 && line.product);
+    }
+
+    function pluralizeBoxes(qty) {
+      return `${qty} ${qty === 1 ? "caja" : "cajas"}`;
+    }
+
+    function updateCart(productId, delta) {
+      const product = getProduct(productId);
+      if (!product || !product.purchasable) return;
+
+      const current = getCartItem(productId);
+      if (!current && delta > 0) {
+        state.cart.items.push({ productId, quantity: delta, unitPrice: product.price });
+      } else if (current) {
+        current.quantity = Math.max(0, Number(current.quantity || 0) + delta);
+      }
+
+      state.cart.items = state.cart.items.filter(item => Number(item.quantity || 0) > 0);
+      renderAll();
+    }
+
+    function clearOrderData() {
+      state.cart.items = [];
+      state.checkout = {
+        customerName: "",
+        dateKey: "",
+        dateLabel: "",
+        weekday: "",
+        availableSlots: [],
+        slotId: "",
+        slotLabel: "",
+        slotStart: "",
+        slotEnd: "",
+        mode: "",
+        zone: "",
+        paymentMethod: "",
+        notes: ""
+      };
+      state.activeStep = 1;
+      state.lastOrderNumber = "";
+      el.customerName.value = "";
+      el.deliveryZone.value = "";
+      el.orderNotes.value = "";
+    }
+
+    /* =========================================================
+       7. FECHAS Y HORARIOS
+       ========================================================= */
+    function getScheduleForDate(date) {
+      const weekday = date.getDay();
+      return CONFIG.scheduleRules.find(rule => Number(rule.weekday) === weekday && rule.active !== false);
+    }
+
+    function isBlockedDate(dateKey) {
+      return CONFIG.blockedDates.some(item => item && item.active !== false && item.date === dateKey);
+    }
+
+    function getSlotCutoffDate(selectedDate, slot) {
+      const offset = Number(slot.cutoffDayOffset || 0);
+      return setTimeOnDate(addDays(selectedDate, offset), slot.cutoffTime || "00:00");
+    }
+
+    function isSlotAvailable(selectedDate, slot) {
+      if (!slot || slot.active === false) return false;
+      const now = new Date();
+      const cutoff = getSlotCutoffDate(selectedDate, slot);
+      return now <= cutoff;
+    }
+
+    function getAvailableSlotsForDate(date) {
+      const key = toDateKey(date);
+      if (isBlockedDate(key)) return [];
+      const rule = getScheduleForDate(date);
+      if (!rule || !Array.isArray(rule.slots)) return [];
+      return rule.slots.filter(slot => isSlotAvailable(date, slot));
+    }
+
+    function getAvailableDates() {
+      const base = todayBase();
+      const dates = [];
+      for (let i = 0; i < CONFIG.limits.daysToShow; i += 1) {
+        const date = addDays(base, i);
+        const slots = getAvailableSlotsForDate(date);
+        if (slots.length > 0) {
+          dates.push({
+            date,
+            key: toDateKey(date),
+            label: formatLongDate(date),
+            chipLabel: formatChipDate(date),
+            weekday: weekdayName(date),
+            slots
+          });
+        }
+      }
+      return dates;
+    }
+
+    function applyDateSelection(dateKey, dateLabel, weekday, slots) {
+      state.checkout.dateKey = dateKey;
+      state.checkout.dateLabel = dateLabel;
+      state.checkout.weekday = weekday;
+      state.checkout.availableSlots = clone(slots || []);
+
+      if (state.checkout.availableSlots.length === 1) {
+        const slot = state.checkout.availableSlots[0];
+        state.checkout.slotId = slot.id;
+        state.checkout.slotLabel = slot.label;
+        state.checkout.slotStart = slot.start;
+        state.checkout.slotEnd = slot.end;
+      } else {
+        state.checkout.slotId = "";
+        state.checkout.slotLabel = "";
+        state.checkout.slotStart = "";
+        state.checkout.slotEnd = "";
+      }
+    }
+
+    function hasSingleAutoSlot() {
+      return state.checkout.availableSlots.length === 1;
+    }
+
+    function needsSlotStep() {
+      return state.checkout.availableSlots.length > 1;
+    }
+
+    /* =========================================================
+       8. RENDERIZADO
+       ========================================================= */
+    function renderCatalog() {
+      el.catalog.innerHTML = getSortedProducts().map(product => {
+        if (product.purchasable && product.status === "active") {
+          const qty = getCartQuantity(product.id);
+          return `
+            <article class="product-card">
+              <button class="product-open" type="button" data-product-detail="${product.id}">
+                <div class="product-media">
+                  ${imageHtml(product.coverImage, product.shortName)}
+                </div>
+                <div class="product-info">
+                  <h2 class="product-name">${product.shortName}</h2>
+                </div>
+              </button>
+              <div class="product-controls">
+                <div class="stepper">
+                  <button class="stepper-btn" data-cart-action="minus" data-product-id="${product.id}" type="button" aria-label="Quitar una caja" ${qty <= 0 ? "disabled" : ""}>−</button>
+                  <div class="stepper-value">${qty}</div>
+                  <button class="stepper-btn" data-cart-action="plus" data-product-id="${product.id}" type="button" aria-label="Agregar una caja">+</button>
+                </div>
+              </div>
+            </article>
+          `;
+        }
+
+        if (product.status === "coming_soon" || product.type === "coming_soon") {
+          return `
+            <article class="product-card">
+              <div class="product-media">
+                ${imageHtml(product.coverImage, product.shortName)}
+                <span class="status-badge">Coming Soon</span>
+              </div>
+              <div class="product-info">
+                <h2 class="product-name">${product.shortName}</h2>
+              </div>
+              <div class="product-foot">
+                <div class="soon-pill">Coming Soon</div>
+              </div>
+            </article>
+          `;
+        }
+
+        return `
+          <article class="product-card teaser" aria-hidden="true">
+            <div class="product-media">
+              <div class="teaser-mark">?</div>
+            </div>
+            <div class="product-info">
+              <h2 class="product-name">${product.shortName}</h2>
+            </div>
+            <div class="product-foot">
+              <div class="teaser-pill">Incógnita</div>
+            </div>
+          </article>
+        `;
+      }).join("");
+
+      $$('[data-product-detail]').forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.activeDetailProductId = btn.dataset.productDetail;
+          renderDetailSheet();
+          openSheet("detail");
+        });
+      });
+
+      $$('[data-cart-action="minus"]').forEach(btn => {
+        btn.addEventListener("click", () => updateCart(btn.dataset.productId, -1));
+      });
+
+      $$('[data-cart-action="plus"]').forEach(btn => {
+        btn.addEventListener("click", () => updateCart(btn.dataset.productId, 1));
+      });
+    }
+
+    function renderDetailSheet() {
+      const product = getProduct(state.activeDetailProductId) || getPrimaryProduct();
+      el.detailTitle.textContent = product.shortName || product.name;
+      el.detailBody.innerHTML = `
+        <div class="detail-image">
+          ${imageHtml(product.detailImage || product.coverImage, `Detalle de ${product.name}`)}
+        </div>
+        <p class="detail-description">${product.description || product.name}</p>
+        ${product.purchasable ? `<p class="detail-price-text">${money(product.price)}</p>` : `<p class="detail-price-text">Coming Soon</p>`}
+      `;
+    }
+
+    function renderCartBar() {
+      const qty = getCartQuantity();
+      const total = getCartTotal();
+      el.cartMain.textContent = `${pluralizeBoxes(qty)} · ${money(total)}`;
+      el.cartSub.textContent = qty > 0 ? `Galletas rellenas + envío` : "Añade tus galletas para continuar";
+      el.checkoutBtn.disabled = qty <= 0;
+      el.checkoutBtn.classList.toggle("ready", qty > 0);
+      el.openCartBtn.disabled = qty <= 0;
+    }
+
+    function renderCartSheet() {
+      const lines = getCartLines();
+      if (!lines.length) {
+        el.cartSheetBody.innerHTML = `
+          <div class="helper-card">
+            <strong>Tu carrito está vacío</strong>
+            <p>Cuando añadas tus galletas, aquí podrás revisarlas rápido.</p>
+          </div>
+        `;
+        return;
+      }
+
+      el.cartSheetBody.innerHTML = lines.map(line => `
+        <div class="cart-line">
+          <div>
+            <strong>${line.product.shortName}</strong>
+            <span>${pluralizeBoxes(line.quantity)} · ${money(line.subtotal)} + envío</span>
+          </div>
+          <div class="line-actions">
+            <button class="mini-btn" data-sheet-action="minus" data-product-id="${line.product.id}" type="button" aria-label="Quitar">−</button>
+            <strong>${line.quantity}</strong>
+            <button class="mini-btn" data-sheet-action="plus" data-product-id="${line.product.id}" type="button" aria-label="Agregar">+</button>
+          </div>
+        </div>
+      `).join("") + `
+        <div class="cart-line">
+          <div>
+            <strong>Total</strong>
+            <span>${money(getCartTotal())} + envío</span>
+          </div>
+          <button class="primary-btn ready" id="sheetCheckoutBtn" type="button">Finalizar pedido</button>
+        </div>
+      `;
+
+      $$('[data-sheet-action="minus"]').forEach(btn => btn.addEventListener("click", () => updateCart(btn.dataset.productId, -1)));
+      $$('[data-sheet-action="plus"]').forEach(btn => btn.addEventListener("click", () => updateCart(btn.dataset.productId, 1)));
+      $("#sheetCheckoutBtn")?.addEventListener("click", () => {
+        closeSheets();
+        goToCheckout();
+      });
+    }
+
+    function renderDateOptions() {
+      const dates = getAvailableDates();
+      el.blockedDatesHelp.textContent = CONFIG.messages.blockedDatesHelp;
+      el.dateStepSummary.textContent = `${pluralizeBoxes(getCartQuantity())} de galletas rellenas`;
+
+      if (!dates.length) {
+        el.dateOptions.innerHTML = `
+          <div class="helper-card">
+            <strong>Sin fechas disponibles</strong>
+            <p>Algunas fechas pueden no aparecer porque CAPIDONA no atenderá pedidos esos días.</p>
+          </div>
+        `;
+        return;
+      }
+
+      el.dateOptions.innerHTML = dates.map(item => `
+        <button
+          type="button"
+          class="date-chip ${state.checkout.dateKey === item.key ? "active" : ""}"
+          data-date-key="${item.key}"
+          data-date-label="${item.label}"
+          data-weekday="${item.weekday}"
+          data-slots='${JSON.stringify(item.slots).replace(/'/g, "&apos;")}'
+        >
+          <span>${item.chipLabel}</span>
+        </button>
+      `).join("");
+
+      $$("#dateOptions .date-chip").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const slots = JSON.parse(btn.dataset.slots.replace(/&apos;/g, "'"));
+          applyDateSelection(btn.dataset.dateKey, btn.dataset.dateLabel, btn.dataset.weekday, slots);
+          renderDateOptions();
+          renderSlotOptions();
+          renderSingleSlotNotice();
+          renderCheckoutSummary();
+          renderFinalProductSummary();
+          setStepStatus(1, "");
+          updateButtonsState();
+        });
+      });
+    }
+
+    function renderSlotOptions() {
+      if (!needsSlotStep()) {
+        el.slotOptions.innerHTML = "";
+        return;
+      }
+
+      el.slotOptions.innerHTML = state.checkout.availableSlots.map(slot => `
+        <button type="button" class="select-card ${state.checkout.slotId === slot.id ? "active" : ""}" data-slot-id="${slot.id}" data-slot-label="${slot.label}" data-slot-start="${slot.start}" data-slot-end="${slot.end}">
+          <div><strong>${slot.label}</strong></div>
+          <div>›</div>
+        </button>
+      `).join("");
+
+      $$("#slotOptions .select-card").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.checkout.slotId = btn.dataset.slotId;
+          state.checkout.slotLabel = btn.dataset.slotLabel;
+          state.checkout.slotStart = btn.dataset.slotStart;
+          state.checkout.slotEnd = btn.dataset.slotEnd;
+          renderSlotOptions();
+          renderCheckoutSummary();
+          renderFinalProductSummary();
+          setStepStatus(2, "");
+          updateButtonsState();
+        });
+      });
+    }
+
+    function renderSingleSlotNotice() {
+      if (!hasSingleAutoSlot() || !state.checkout.slotLabel) {
+        el.singleSlotNotice.className = "helper-card single-slot-note";
+        el.singleSlotNotice.innerHTML = "";
+        return;
+      }
+      el.singleSlotNotice.className = "helper-card single-slot-note show";
+      el.singleSlotNotice.innerHTML = `
+        <strong>Horario único para este día</strong>
+        <p>Para este día, los pedidos se coordinan únicamente dentro del horario de ${state.checkout.slotLabel}.</p>
+      `;
+    }
+
+    function renderModeOptions() {
+      const options = [
+        { id: "delivery", title: "Entrega" },
+        { id: "pickup", title: "Retiro" }
+      ];
+
+      el.modeOptions.innerHTML = options.map(option => `
+        <button type="button" class="select-card ${state.checkout.mode === option.id ? "active" : ""}" data-mode-id="${option.id}">
+          <div><strong>${option.title}</strong></div>
+          <div>›</div>
+        </button>
+      `).join("");
+
+      $$("#modeOptions .select-card").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.checkout.mode = btn.dataset.modeId;
+          if (state.checkout.mode !== "delivery") {
+            state.checkout.zone = "";
+            el.deliveryZone.value = "";
+          }
+          renderModeOptions();
+          updateModeField();
+          renderCheckoutSummary();
+          renderFinalProductSummary();
+          setStepStatus(3, "");
+          updateButtonsState();
+        });
+      });
+
+      updateModeField();
+    }
+
+    function updateModeField() {
+      const isDelivery = state.checkout.mode === "delivery";
+      const isPickup = state.checkout.mode === "pickup";
+      el.zoneFieldWrap.classList.toggle("hidden", !isDelivery);
+      el.pickupNotice.classList.toggle("hidden", !isPickup);
+    }
+
+    function renderPaymentOptions() {
+      el.paymentOptions.innerHTML = CONFIG.paymentMethods.filter(method => method.active !== false).map(method => `
+        <button type="button" class="select-card ${state.checkout.paymentMethod === method.id ? "active" : ""}" data-payment-id="${method.id}">
+          <div><strong>${method.label}</strong></div>
+          <div>›</div>
+        </button>
+      `).join("");
+
+      $$("#paymentOptions .select-card").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.checkout.paymentMethod = btn.dataset.paymentId;
+          renderPaymentOptions();
+          renderBanks();
+          renderCheckoutSummary();
+          setStepStatus(4, "");
+          updateButtonsState();
+        });
+      });
+    }
+
+    function renderBanks() {
+      const showBanks = state.checkout.paymentMethod === "transfer";
+      el.bankGrid.classList.toggle("hidden", !showBanks);
+      if (!showBanks) {
+        el.bankGrid.innerHTML = "";
+        return;
+      }
+
+      el.bankGrid.innerHTML = CONFIG.banks.filter(bank => bank.active !== false).map(bank => `
+        <div class="bank-card">
+          <strong>${bank.name}</strong>
+          <p>${bank.accountType} · ${bank.accountNumber}</p>
+          <p>Titular: ${bank.holder}</p>
+          <button class="copy-btn" type="button" data-copy="${bank.accountNumber}">Copiar cuenta</button>
+        </div>
+      `).join("");
+
+      $$("#bankGrid .copy-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(btn.dataset.copy);
+            showToast(CONFIG.messages.copied, "success");
+          } catch (error) {
+            showToast("No se pudo copiar automáticamente.", "error");
+          }
+        });
+      });
+    }
+
+    function renderFinalProductSummary() {
+      const lines = getCartLines();
+      const first = lines[0];
+      if (!first) {
+        el.finalProductSummary.innerHTML = "";
+        return;
+      }
+      const modeLabel = state.checkout.mode === "delivery" ? "Entrega" : state.checkout.mode === "pickup" ? "Retiro" : "Modalidad pendiente";
+      el.finalProductSummary.innerHTML = `
+        ${imageHtml(first.product.coverImage, first.product.shortName)}
+        <div>
+          <strong>${first.product.shortName}</strong>
+          <span>${pluralizeBoxes(first.quantity)} · ${money(first.subtotal)} + envío</span>
+          <span>${state.checkout.dateLabel || "Fecha pendiente"}</span>
+          <span>${state.checkout.slotLabel || "Horario pendiente"} · ${modeLabel}</span>
+        </div>
+      `;
+    }
+
+    function renderCheckoutSummary() {
+      const payment = CONFIG.paymentMethods.find(method => method.id === state.checkout.paymentMethod);
+      const paymentLabel = payment ? payment.label : "Pendiente";
+      const modeLabel = state.checkout.mode === "delivery" ? "Entrega" : state.checkout.mode === "pickup" ? "Retiro" : "Pendiente";
+      const zoneLine = state.checkout.mode === "delivery" ? `
+        <div class="summary-row">
+          <span class="key">Lugar</span>
+          <span>${state.checkout.zone || "Pendiente"}</span>
+        </div>
+      ` : "";
+
+      const productLine = getCartLines().map(line => `${line.product.shortName} (${pluralizeBoxes(line.quantity)})`).join(", ") || "Pendiente";
+
+      el.checkoutSummary.innerHTML = `
+        <div class="summary-row">
+          <span class="key">Producto</span>
+          <span>${productLine}</span>
+        </div>
+        <div class="summary-row">
+          <span class="key">Fecha</span>
+          <span>${state.checkout.dateLabel || "Pendiente"}</span>
+        </div>
+        <div class="summary-row">
+          <span class="key">Horario</span>
+          <span>${state.checkout.slotLabel || "Pendiente"}</span>
+        </div>
+        <div class="summary-row">
+          <span class="key">Modalidad</span>
+          <span>${modeLabel}</span>
+        </div>
+        ${zoneLine}
+        <div class="summary-row">
+          <span class="key">Pago</span>
+          <span>${paymentLabel}</span>
+        </div>
+        <div class="summary-row total">
+          <span>Total</span>
+          <span>${money(getCartTotal())} + envío</span>
+        </div>
+      `;
+    }
+
+    function renderSteps() {
+      $$(".step-panel").forEach(panel => {
+        panel.classList.toggle("active", Number(panel.dataset.step) === state.activeStep);
+      });
+    }
+
+    function renderAll() {
+      renderCatalog();
+      renderCartBar();
+      renderCartSheet();
+      renderDetailSheet();
+      renderDateOptions();
+      renderSlotOptions();
+      renderSingleSlotNotice();
+      renderModeOptions();
+      renderPaymentOptions();
+      renderBanks();
+      renderCheckoutSummary();
+      renderFinalProductSummary();
+      renderSteps();
+      updateButtonsState();
+    }
+
+    /* =========================================================
+       9. VALIDACIONES Y NAVEGACIÓN
+       ========================================================= */
+    function validateCheckoutStep(step, showErrors = true) {
+      if (showErrors) resetCheckoutStatus();
+
+      if (step === 1) {
+        state.checkout.customerName = el.customerName.value.trim();
+        if (!state.checkout.customerName || !state.checkout.dateKey) {
+          if (showErrors) setStepStatus(1, CONFIG.messages.invalidStep1, "error");
+          return false;
+        }
+      }
+
+      if (step === 2 && needsSlotStep()) {
+        if (!state.checkout.slotId) {
+          if (showErrors) setStepStatus(2, CONFIG.messages.invalidSlot, "error");
+          return false;
+        }
+      }
+
+      if (step === 3) {
+        state.checkout.zone = el.deliveryZone.value.trim();
+        if (!state.checkout.mode) {
+          if (showErrors) setStepStatus(3, CONFIG.messages.invalidMode, "error");
+          return false;
+        }
+        if (state.checkout.mode === "delivery" && !state.checkout.zone) {
+          if (showErrors) setStepStatus(3, CONFIG.messages.invalidZone, "error");
+          return false;
+        }
+      }
+
+      if (step === 4) {
+        state.checkout.notes = el.orderNotes.value.trim();
+        if (!state.checkout.paymentMethod) {
+          if (showErrors) setStepStatus(4, CONFIG.messages.invalidPayment, "error");
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    function updateButtonsState() {
+      const step1Ready = validateCheckoutStep(1, false);
+      const step2Ready = !needsSlotStep() || validateCheckoutStep(2, false);
+      const step3Ready = validateCheckoutStep(3, false);
+      const step4Ready = validateCheckoutStep(4, false);
+
+      $("#step1Next").disabled = !step1Ready;
+      $("#step1Next").classList.toggle("ready", step1Ready);
+      $("#step2Next").disabled = !step2Ready;
+      $("#step2Next").classList.toggle("ready", step2Ready);
+      $("#step3Next").disabled = !step3Ready;
+      $("#step3Next").classList.toggle("ready", step3Ready);
+      $("#confirmWhatsAppBtn").disabled = !step4Ready;
+      $("#confirmWhatsAppBtn").classList.toggle("ready", step4Ready);
+    }
+
+    function closeSheets() {
+      state.openSheet = null;
+      el.overlay.classList.remove("active");
+      el.detailSheet.classList.remove("active");
+      el.cartSheet.classList.remove("active");
+    }
+
+    function openSheet(name) {
+      state.openSheet = name;
+      el.overlay.classList.add("active");
+      el.detailSheet.classList.toggle("active", name === "detail");
+      el.cartSheet.classList.toggle("active", name === "cart");
+    }
+
+    function showMain() {
+      state.view = "main";
+      el.checkoutScreen.classList.remove("active");
+      el.thanksScreen.classList.remove("active");
+      closeSheets();
+    }
+
+    function showThanks() {
+      state.view = "thanks";
+      el.checkoutScreen.classList.remove("active");
+      el.thanksScreen.classList.add("active");
+      closeSheets();
+    }
+
+    function goToCheckout() {
+      if (getCartQuantity() <= 0) {
+        showToast(CONFIG.messages.emptyCart, "info");
+        return;
+      }
+      state.view = "checkout";
+      state.activeStep = 1;
+      el.checkoutScreen.classList.add("active");
+      el.thanksScreen.classList.remove("active");
+      closeSheets();
+      renderAll();
+    }
+
+    function goNextStep() {
+      if (!validateCheckoutStep(state.activeStep, true)) return;
+      if (state.activeStep === 1) {
+        state.activeStep = needsSlotStep() ? 2 : 3;
+      } else if (state.activeStep === 2) {
+        state.activeStep = 3;
+      } else if (state.activeStep === 3) {
+        state.activeStep = 4;
+      }
+      renderSteps();
+      renderSingleSlotNotice();
+      renderCheckoutSummary();
+      renderFinalProductSummary();
+      updateButtonsState();
+    }
+
+    function goBackStep() {
+      if (state.activeStep === 1) {
+        showMain();
+        return;
+      }
+      if (state.activeStep === 3 && !needsSlotStep()) {
+        state.activeStep = 1;
+      } else {
+        state.activeStep -= 1;
+      }
+      renderSteps();
+      updateButtonsState();
+    }
+
+    function cancelCheckout() {
+      showMain();
+      showToast(CONFIG.messages.checkoutCanceled, "info");
+    }
+
+    /* =========================================================
+       10. PEDIDOS, SHEETS Y WHATSAPP
+       ========================================================= */
+    function buildOrderPayload(orderNumber = "") {
+      const lines = getCartLines();
+      const first = lines[0];
+      const payment = CONFIG.paymentMethods.find(method => method.id === state.checkout.paymentMethod);
+      state.checkout.customerName = el.customerName.value.trim();
+      state.checkout.zone = el.deliveryZone.value.trim();
+      state.checkout.notes = el.orderNotes.value.trim();
+
+      return {
+        orderNumber,
+        createdAt: new Date().toISOString(),
+        source: "github_pages",
+        businessName: CONFIG.business.name,
+        customerName: state.checkout.customerName,
+        productId: first?.product?.id || "",
+        productName: first?.product?.name || "",
+        quantity: getCartQuantity(),
+        unitPrice: first?.unitPrice || 0,
+        subtotal: getCartTotal(),
+        totalText: `${money(getCartTotal())} + envío`,
+        requestedDate: state.checkout.dateKey,
+        requestedDateLabel: state.checkout.dateLabel,
+        weekday: state.checkout.weekday,
+        slotId: state.checkout.slotId,
+        slotLabel: state.checkout.slotLabel,
+        slotStart: state.checkout.slotStart,
+        slotEnd: state.checkout.slotEnd,
+        mode: state.checkout.mode,
+        zone: state.checkout.mode === "delivery" ? state.checkout.zone : "",
+        paymentMethod: state.checkout.paymentMethod,
+        paymentLabel: payment?.label || "",
+        notes: state.checkout.notes,
+        orderStatus: "recibido",
+        paymentStatus: "pendiente",
+        rawCartItems: lines.map(line => ({
+          productId: line.product.id,
+          productName: line.product.name,
+          quantity: line.quantity,
+          unitPrice: line.unitPrice,
+          subtotal: line.subtotal
+        })),
+        appVersion: CONFIG.appVersion
+      };
+    }
+
+    function buildWhatsAppMessage(orderNumber = "") {
+      const paymentMethod = state.checkout.paymentMethod;
+      const message = [
+        orderNumber
+          ? `Hola, quiero confirmar mi capipedido, el número es ${orderNumber}.`
+          : "Hola, quiero confirmar mi capipedido.",
+        paymentMethod === "transfer" ? "Adjunto el pago." : ""
+      ].filter(Boolean).join("\n");
+      return message;
+    }
+
+
+    async function submitToWhatsApp() {
+      if (!validateCheckoutStep(4, true)) return;
+
+      const confirmBtn = $("#confirmWhatsAppBtn");
+      confirmBtn.disabled = true;
+
+      let orderNumber = "";
+      const basePayload = buildOrderPayload("");
+      const result = await submitOrderToSheets(basePayload);
+
+      if (result.ok && result.orderNumber) {
+        orderNumber = result.orderNumber;
+        state.lastOrderNumber = orderNumber;
+      } else if (result.mode === "local") {
+        showToast(CONFIG.messages.orderLocalMode, "info");
+      } else {
+        showToast(CONFIG.messages.orderSheetError, "info");
+      }
+
+      const finalPayload = buildOrderPayload(orderNumber);
+      const whatsappNumber = CONFIG.contact.whatsappNumber;
+      const message = buildWhatsAppMessage(orderNumber);
+
+      if (!whatsappNumber) {
+        setStepStatus(4, "Configura el número de WhatsApp para abrir el chat.", "error");
+        confirmBtn.disabled = false;
+        updateButtonsState();
+        return;
+      }
+
+      const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+      showThanks();
+      window.open(url, "_blank");
+    }
+
+    /* =========================================================
+       11. EVENTOS
+       ========================================================= */
+    $("#openCartBtn").addEventListener("click", () => {
+      renderCartSheet();
+      openSheet("cart");
+    });
+    $("#checkoutBtn").addEventListener("click", goToCheckout);
+    $("#closeCartBtn").addEventListener("click", closeSheets);
+    $("#closeDetailBtn").addEventListener("click", closeSheets);
+    $("#overlay").addEventListener("click", closeSheets);
+
+    $("#backBtn").addEventListener("click", goBackStep);
+    $("#cancelBtn").addEventListener("click", cancelCheckout);
+
+    $("#step1Cancel").addEventListener("click", cancelCheckout);
+    $("#step1Next").addEventListener("click", goNextStep);
+    $("#step2Back").addEventListener("click", goBackStep);
+    $("#step2Next").addEventListener("click", goNextStep);
+    $("#step3Back").addEventListener("click", goBackStep);
+    $("#step3Next").addEventListener("click", goNextStep);
+    $("#step4Back").addEventListener("click", goBackStep);
+    $("#confirmWhatsAppBtn").addEventListener("click", submitToWhatsApp);
+    $("#newOrderBtn").addEventListener("click", () => {
+      clearOrderData();
+      renderAll();
+      showMain();
+    });
+
+    el.customerName.addEventListener("input", () => {
+      setStepStatus(1, "");
+      state.checkout.customerName = el.customerName.value.trim();
+      updateButtonsState();
+    });
+    el.deliveryZone.addEventListener("input", () => {
+      setStepStatus(3, "");
+      state.checkout.zone = el.deliveryZone.value.trim();
+      renderCheckoutSummary();
+      renderFinalProductSummary();
+      updateButtonsState();
+    });
+    el.orderNotes.addEventListener("input", () => {
+      state.checkout.notes = el.orderNotes.value.trim();
+    });
+
+    /* =========================================================
+       12. INICIALIZACIÓN
+       ========================================================= */
+    async function init() {
+      await loadRemoteConfig();
+      renderAll();
+    }
+
+    init();
+  </script>
+</body>
+</html>
