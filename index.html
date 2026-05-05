@@ -2103,7 +2103,7 @@
     /* =========================================================
        5. CONFIGURACIÓN REMOTA / SHEETS
        ========================================================= */
-const CONFIG_CACHE_KEY = "CAPIDONA_LAST_REMOTE_CONFIG_V4";
+const CONFIG_CACHE_KEY = "CAPIDONA_LAST_REMOTE_CONFIG_V5";
     function saveRemoteConfigCache(configData) {
   try {
     localStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify(configData));
@@ -3277,31 +3277,29 @@ if (copyEmailBtn && email) {
        12. INICIALIZACIÓN
        ========================================================= */
    async function init() {
-  let loadedRemote = false;
+  const cachedConfig = loadRemoteConfigCache();
 
-  showToast("Cargando información actualizada...", "info");
-
-  if (CONFIG.integrations.sheetsEnabled && CONFIG.integrations.configEndpoint) {
-    const remoteConfig = await loadRemoteConfig();
-
-    if (remoteConfig) {
-      loadedRemote = true;
-      console.log("CAPIDONA: configuración cargada desde Sheets antes del primer render.");
-    }
-  }
-
-  if (!loadedRemote) {
-    const cachedConfig = loadRemoteConfigCache();
-
-    if (cachedConfig) {
-      normalizeRemoteConfig(cachedConfig);
-      console.log("CAPIDONA: configuración cargada desde caché porque Sheets no respondió.");
-    } else {
-      console.warn("CAPIDONA: usando CONFIG local porque no hubo Sheets ni caché.");
-    }
+  if (cachedConfig) {
+    normalizeRemoteConfig(cachedConfig);
+    console.log("CAPIDONA: cargando desde último caché disponible.");
+  } else {
+    console.warn("CAPIDONA: no hay caché previo, usando CONFIG local inicial.");
   }
 
   renderAll();
+
+  if (CONFIG.integrations.sheetsEnabled && CONFIG.integrations.configEndpoint) {
+    try {
+      const remoteConfig = await loadRemoteConfig();
+
+      if (remoteConfig) {
+        console.log("CAPIDONA: configuración actualizada desde Sheets y guardada en caché.");
+        renderAll();
+      }
+    } catch (error) {
+      console.warn("CAPIDONA: no se pudo actualizar desde Sheets. Se conserva caché/local.", error);
+    }
+  }
 }
 
 init();
