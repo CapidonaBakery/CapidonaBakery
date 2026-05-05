@@ -1884,8 +1884,8 @@
           name: "Caja de 6 galletas rellenas",
           shortName: "Galletas rellenas",
           price: 6,
-          coverImage: "Portada Galletas.jpeg",
-          detailImage: "Detalle Galletas.jpeg",
+          coverImage: "assets/images/Portada Galletas.jpeg",
+          detailImage: "assets/images/Detalle Galletas.jpeg",
           description: "Caja de 6 galletas rellenas: 2 Oreo, 2 Manjar y 2 Nutella.",
           order: 1
         },
@@ -1897,8 +1897,8 @@
           name: "Torta de zanahoria",
           shortName: "Torta de zanahoria",
           price: 0,
-          coverImage: "Portada torta de zanahoria.jpeg",
-          detailImage: "Detalle torta de zanahoria.jpeg",
+          coverImage: "assets/images/Portada torta de zanahoria.jpeg",
+          detailImage: "assets/images/Detalle torta de zanahoria.jpeg",
           description: "Muy pronto en CAPIDONA.",
           order: 2
         },
@@ -2097,9 +2097,9 @@
     /* =========================================================
        5. CONFIGURACIÓN REMOTA / SHEETS
        ========================================================= */
- const CONFIG_CACHE_KEY = "CAPIDONA_LAST_REMOTE_CONFIG";
+const CONFIG_CACHE_KEY = "CAPIDONA_LAST_REMOTE_CONFIG_V2";
 
-function saveRemoteConfigCache(configData) {
+    function saveRemoteConfigCache(configData) {
   try {
     localStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify(configData));
   } catch (error) {
