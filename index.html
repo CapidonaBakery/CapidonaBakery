@@ -2206,28 +2206,64 @@ async function loadRemoteConfig() {
       if (Array.isArray(remote.pageConfig)) Object.assign(CONFIG.pageContent, normalizePageContentRows(remote.pageConfig));
     }
 
-    async function submitOrderToSheets(orderPayload) {
-      if (!CONFIG.integrations.sheetsEnabled || !CONFIG.integrations.ordersEndpoint) {
-        return { ok: false, mode: "local", orderNumber: "" };
-      }
+  async function submitOrderToSheets(orderPayload) {
+  if (!CONFIG.integrations.sheetsEnabled || !CONFIG.integrations.ordersEndpoint) {
+    return {
+      ok: false,
+      mode: "local",
+      orderNumber: "",
+      error: "La integración con Sheets no está activa."
+    };
+  }
 
-      try {
-        const response = await fetch(CONFIG.integrations.ordersEndpoint, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(orderPayload)
-        });
-        if (!response.ok) throw new Error("Error al registrar el pedido.");
-        const result = await response.json();
-        return {
-          ok: Boolean(result.ok),
-          orderNumber: result.orderNumber || ""
-        };
-      } catch (error) {
-        console.warn("CAPIDONA: no se pudo registrar en Sheets.", error);
-        return { ok: false, mode: "error", orderNumber: "" };
-      }
+  try {
+    const response = await fetch(CONFIG.integrations.ordersEndpoint, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(orderPayload)
+    });
+
+    const rawText = await response.text();
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${rawText || "Error al registrar el pedido."}`);
     }
+
+    let result;
+
+    try {
+      result = JSON.parse(rawText);
+    } catch (parseError) {
+      throw new Error(`La respuesta de Apps Script no fue JSON válido: ${rawText.slice(0, 300)}`);
+    }
+
+    if (!result.ok) {
+      return {
+        ok: false,
+        mode: "apps_script_error",
+        orderNumber: result.orderNumber || "",
+        error: result.error || "Apps Script devolvió ok:false sin detalle."
+      };
+    }
+
+    return {
+      ok: true,
+      mode: "remote",
+      orderNumber: result.orderNumber || "",
+      error: ""
+    };
+
+  } catch (error) {
+    console.error("CAPIDONA: no se pudo registrar en Sheets.", error);
+
+    return {
+      ok: false,
+      mode: "error",
+      orderNumber: "",
+      error: String(error.message || error)
+    };
+  }
+}
 
     /* =========================================================
        6. PRODUCTOS Y CARRITO
@@ -3110,40 +3146,55 @@ async function loadRemoteConfig() {
     }
 
 
-    async function submitToWhatsApp() {
-      if (!validateCheckoutStep(4, true)) return;
+   async function submitToWhatsApp() {
+  if (!validateCheckoutStep(4, true)) return;
 
-      const confirmBtn = $("#confirmWhatsAppBtn");
-      confirmBtn.disabled = true;
+  const confirmBtn = $("#confirmWhatsAppBtn");
+  confirmBtn.disabled = true;
 
-      let orderNumber = "";
-      const basePayload = buildOrderPayload("");
-      const result = await submitOrderToSheets(basePayload);
+  setStepStatus(4, "Registrando tu pedido...", "info");
 
-      if (result.ok && result.orderNumber) {
-        orderNumber = result.orderNumber;
-        state.lastOrderNumber = orderNumber;
-      } else if (result.mode === "local") {
-        showToast(CONFIG.messages.orderLocalMode, "info");
-      } else {
-        showToast(CONFIG.messages.orderSheetError, "info");
-      }
+  const basePayload = buildOrderPayload("");
+  const result = await submitOrderToSheets(basePayload);
 
-      const finalPayload = buildOrderPayload(orderNumber);
-      const whatsappNumber = CONFIG.contact.whatsappNumber;
-      const message = buildWhatsAppMessage(orderNumber);
+  if (!result.ok || !result.orderNumber) {
+    const errorMessage = result.error
+      ? `No se pudo registrar el pedido en Sheets: ${result.error}`
+      : "No se pudo registrar el pedido en Sheets. Intenta nuevamente.";
 
-      if (!whatsappNumber) {
-        setStepStatus(4, "Configura el número de WhatsApp para abrir el chat.", "error");
-        confirmBtn.disabled = false;
-        updateButtonsState();
-        return;
-      }
+    console.error("CAPIDONA: pedido detenido antes de WhatsApp.", {
+      result,
+      payload: basePayload
+    });
 
-      const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-      showThanks();
-      window.location.href = url;
-    }
+    setStepStatus(4, errorMessage, "error");
+    showToast("No se abrió WhatsApp porque el pedido no fue guardado.", "error");
+
+    confirmBtn.disabled = false;
+    updateButtonsState();
+    return;
+  }
+
+  const orderNumber = result.orderNumber;
+  state.lastOrderNumber = orderNumber;
+
+  const whatsappNumber = CONFIG.contact.whatsappNumber;
+  const message = buildWhatsAppMessage(orderNumber);
+
+  if (!whatsappNumber) {
+    setStepStatus(4, "Configura el número de WhatsApp para abrir el chat.", "error");
+    confirmBtn.disabled = false;
+    updateButtonsState();
+    return;
+  }
+
+  setStepStatus(4, `Pedido ${orderNumber} registrado correctamente. Abriendo WhatsApp...`, "success");
+
+  const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+  showThanks();
+  window.location.href = url;
+}
 
     /* =========================================================
        11. EVENTOS
@@ -3208,30 +3259,29 @@ async function loadRemoteConfig() {
        12. INICIALIZACIÓN
        ========================================================= */
     async function init() {
-  // 1. Primero intentar cargar la última configuración guardada desde Sheets.
-  const cachedConfig = loadRemoteConfigCache();
+  let loadedRemote = false;
 
-  if (cachedConfig) {
-    normalizeRemoteConfig(cachedConfig);
-    console.log("CAPIDONA: configuración previa cargada desde caché antes de renderizar.");
-  }
-
-  // 2. Renderizar usando caché si existe. Si no existe, usa el CONFIG local.
-  renderAll();
-
-  // 3. Actualizar desde Sheets en segundo plano.
   if (CONFIG.integrations.sheetsEnabled && CONFIG.integrations.configEndpoint) {
-    loadRemoteConfig()
-      .then((remoteConfig) => {
-        if (remoteConfig) {
-          renderAll();
-          console.log("CAPIDONA: configuración actualizada desde Sheets.");
-        }
-      })
-      .catch((error) => {
-        console.warn("CAPIDONA: no se pudo actualizar desde Sheets.", error);
-      });
+    const remoteConfig = await loadRemoteConfig();
+
+    if (remoteConfig) {
+      loadedRemote = true;
+      console.log("CAPIDONA: configuración cargada desde Sheets antes del primer render.");
+    }
   }
+
+  if (!loadedRemote) {
+    const cachedConfig = loadRemoteConfigCache();
+
+    if (cachedConfig) {
+      normalizeRemoteConfig(cachedConfig);
+      console.log("CAPIDONA: configuración cargada desde caché porque Sheets no respondió.");
+    } else {
+      console.warn("CAPIDONA: usando CONFIG local porque no hubo Sheets ni caché.");
+    }
+  }
+
+  renderAll();
 }
 
 init();
