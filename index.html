@@ -2907,8 +2907,9 @@ if (copyEmailBtn && email) {
     }
   });
 }
+}
 
-    function setActivePageTab(pageName = "products") {
+function setActivePageTab(pageName = "products") {
       $$("[data-page-tab]").forEach(btn => {
         btn.classList.toggle("active", btn.dataset.pageTab === pageName);
       });
