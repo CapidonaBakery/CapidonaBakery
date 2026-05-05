@@ -1496,6 +1496,50 @@
       overflow-wrap: anywhere;
     }
 
+    .contact-email-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.contact-email-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--brown-strong);
+  font-size: .92rem;
+  line-height: 1.25;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.copy-email-btn {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--bg-soft);
+  color: var(--brown-strong);
+  font-size: .78rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform var(--transition), background var(--transition), border-color var(--transition);
+}
+
+.copy-email-btn:active {
+  transform: scale(.97);
+}
+
+.copy-email-btn:hover {
+  border-color: var(--pink-strong);
+  background: #fff2f5;
+}
+
     @media (min-width: 440px) {
       .product-card { min-width: 188px; width: 188px; }
       .section-tab { font-size: .8rem; }
@@ -2883,14 +2927,13 @@ el.contactContent.innerHTML = `
     ` : ""}
 
     ${email ? `
-      <div class="contact-item">
-        <strong>Correo electrónico</strong>
-        <span id="contactEmailText">${email}</span>
-        <button class="copy-btn" id="copyContactEmailBtn" type="button">
-          Copiar correo
-        </button>
-      </div>
-    ` : ""}
+  <div class="contact-email-row">
+    <span class="contact-email-text" id="contactEmailText">${email}</span>
+    <button class="copy-email-btn" id="copyContactEmailBtn" type="button" aria-label="Copiar correo">
+      Copiar
+    </button>
+  </div>
+` : ""}
   </div>
 `;
 
