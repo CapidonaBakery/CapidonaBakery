@@ -1453,6 +1453,43 @@
       font-weight: 650;
     }
 
+    .about-copy {
+  display: grid;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.about-copy p {
+  margin: 0;
+  color: var(--muted);
+  font-size: .95rem;
+  line-height: 1.55;
+  font-weight: 650;
+  text-align: left;
+}
+
+.about-copy .about-lead {
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(217,154,163,.14);
+  border: 1px solid rgba(217,154,163,.26);
+  color: var(--brown-strong);
+  font-size: 1rem;
+  line-height: 1.42;
+  font-weight: 900;
+}
+
+.about-copy .about-highlight {
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  color: var(--brown-strong);
+  font-size: .94rem;
+  line-height: 1.48;
+  font-weight: 800;
+}
+
     .info-image {
       width: 100%;
       margin: 12px 0 14px;
@@ -2891,11 +2928,31 @@ async function loadRemoteConfig() {
     </div>
   ` : "";
 
-  el.aboutContent.innerHTML = `
-    <h2>${page.sobreTitulo || "Quiénes somos"}</h2>
-    ${sobreImage}
-    <p>${page.sobreTexto || "Información de CAPIDONA pendiente de configurar."}</p>
-  `;
+ const sobreTexto = page.sobreTexto || "Información de CAPIDONA pendiente de configurar.";
+
+const sobreParrafos = sobreTexto
+  .split(/\n+/)
+  .map(text => text.trim())
+  .filter(Boolean);
+
+el.aboutContent.innerHTML = `
+  <h2>${page.sobreTitulo || "Quiénes somos"}</h2>
+  ${sobreImage}
+
+  <div class="about-copy">
+    ${sobreParrafos.map((paragraph, index) => {
+      if (index === 0) {
+        return `<p class="about-lead">${paragraph}</p>`;
+      }
+
+      if (paragraph.startsWith("¿Cómo funciona?")) {
+        return `<p class="about-highlight">${paragraph}</p>`;
+      }
+
+      return `<p>${paragraph}</p>`;
+    }).join("")}
+  </div>
+`;
 
   const contactoImage = page.contactoImagen ? `
     <div class="info-image">
