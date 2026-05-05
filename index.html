@@ -1501,6 +1501,28 @@
       .section-tab { font-size: .8rem; }
     }
 
+.see-more-btn {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(37, 28, 24, 0.78);
+  color: #fff;
+  font-size: .68rem;
+  font-weight: 900;
+  letter-spacing: .02em;
+  box-shadow: 0 8px 18px rgba(22, 19, 17, 0.18);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  z-index: 2;
+}
+
+.see-more-btn:active {
+  transform: scale(.97);
+}
+    
   </style>
 </head>
 <body>
@@ -2389,14 +2411,17 @@ async function loadRemoteConfig() {
           const qty = getCartQuantity(product.id);
           return `
             <article class="product-card">
-              <button class="product-open" type="button" data-product-detail="${product.id}">
-                <div class="product-media">
-                  ${imageHtml(product.coverImage, product.shortName)}
-                </div>
-                <div class="product-info">
-                  <h2 class="product-name">${product.shortName}</h2>
-                </div>
-              </button>
+              <div class="product-open">
+  <div class="product-media">
+    ${imageHtml(product.coverImage, product.shortName)}
+    <button class="see-more-btn" type="button" data-product-detail="${product.id}">
+      Ver más
+    </button>
+  </div>
+  <div class="product-info">
+    <h2 class="product-name">${product.shortName}</h2>
+  </div>
+</div>
               <div class="product-controls">
                 <div class="stepper">
                   <button class="stepper-btn" data-cart-action="minus" data-product-id="${product.id}" type="button" aria-label="Quitar una caja" ${qty <= 0 ? "disabled" : ""}>−</button>
