@@ -1522,6 +1522,17 @@
 .see-more-btn:active {
   transform: scale(.97);
 }
+
+.info-link {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  text-decoration: none;
+}
     
   </style>
 </head>
@@ -1890,25 +1901,27 @@
           order: 1
         },
         {
-          id: "carrot_cake",
-          type: "coming_soon",
-          status: "coming_soon",
-          purchasable: false,
-          name: "Torta de zanahoria",
-          shortName: "Torta de zanahoria",
-          price: 0,
-          coverImage: "assets/images/Portada torta de zanahoria.jpeg",
-          detailImage: "assets/images/Detalle torta de zanahoria.jpeg",
-          description: "Muy pronto en CAPIDONA.",
-          order: 2
-        },
+          {
+  id: "carrot_cake",
+  type: "active",
+  status: "active",
+  purchasable: true,
+  name: "Torta de zanahoria",
+  shortName: "Torta de zanahoria",
+  price: 6.5,
+  coverImage: "assets/images/Portada torta de zanahoria.jpeg",
+  detailImage: "assets/images/Detalle torta de zanahoria.jpeg",
+  description: "Torta artesanal de zanahoria con cobertura de queso crema, nuez y mini zanahorias.",
+  order: 2
+},
      {
   id: "mystery_1",
-  type: "teaser",
-  status: "teaser",
+  type: "coming_soon",
+  status: "coming_soon",
   purchasable: false,
-  name: "Próxima delicia",
-  shortName: "Próxima delicia",
+  name: "Otra delicia",
+  shortName: "Otra delicia",
+  price: 0,
   coverImage: "assets/images/Proxima delicia.png",
   detailImage: "assets/images/Proxima delicia.png",
   description: "Producto reservado para futuro catálogo.",
@@ -2092,8 +2105,7 @@
     /* =========================================================
        5. CONFIGURACIÓN REMOTA / SHEETS
        ========================================================= */
-const CONFIG_CACHE_KEY = "CAPIDONA_LAST_REMOTE_CONFIG_V2";
-
+const CONFIG_CACHE_KEY = "CAPIDONA_LAST_REMOTE_CONFIG_V3";
     function saveRemoteConfigCache(configData) {
   try {
     localStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify(configData));
@@ -2446,18 +2458,19 @@ async function loadRemoteConfig() {
         }
 
         return `
-          <article class="product-card teaser" aria-hidden="true">
-            <div class="product-media">
-              <div class="teaser-mark">?</div>
-            </div>
-            <div class="product-info">
-              <h2 class="product-name">${product.shortName}</h2>
-            </div>
-            <div class="product-foot">
-              <div class="teaser-pill">Incógnita</div>
-            </div>
-          </article>
-        `;
+  <article class="product-card teaser" aria-hidden="true">
+    <div class="product-media">
+      ${product.coverImage ? imageHtml(product.coverImage, product.shortName) : `<div class="teaser-mark">?</div>`}
+      <span class="status-badge">Muy pronto</span>
+    </div>
+    <div class="product-info">
+      <h2 class="product-name">${product.shortName}</h2>
+    </div>
+    <div class="product-foot">
+      <div class="teaser-pill">Muy pronto</div>
+    </div>
+  </article>
+`;
       }).join("");
 
       $$('[data-product-detail]').forEach(btn => {
