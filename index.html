@@ -1616,6 +1616,74 @@
   border-radius: 16px;
   text-decoration: none;
 }
+
+    /* =========================
+   AJUSTE PRODUCTOS SELECCIONADOS EN CONFIRMACIÓN
+   ========================= */
+
+.product-mini-summary {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.product-mini-summary-title {
+  margin: 0;
+  color: var(--brown-strong);
+  font-size: .92rem;
+  line-height: 1.15;
+  font-weight: 900;
+}
+
+.selected-products-list {
+  display: grid;
+  gap: 8px;
+}
+
+.selected-product-card {
+  display: grid;
+  grid-template-columns: 50px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 8px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--bg-soft);
+}
+
+.selected-product-card img {
+  width: 50px;
+  height: 50px;
+  border-radius: 13px;
+  object-fit: cover;
+  background: var(--surface-2);
+}
+
+.selected-product-info strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--brown-strong);
+  font-size: .86rem;
+  line-height: 1.15;
+  font-weight: 900;
+}
+
+.selected-product-info span {
+  display: block;
+  color: var(--muted);
+  font-size: .78rem;
+  line-height: 1.25;
+  font-weight: 700;
+}
+
+.selected-product-total {
+  margin-top: 3px;
+  color: var(--brown-strong) !important;
+  font-weight: 900 !important;
+}
     
   </style>
 </head>
@@ -1765,23 +1833,23 @@
           <p class="step-copy">Selecciona tu método de pago.</p>
 
           <div class="step-content">
-            <div class="product-mini-summary" id="finalProductSummary"></div>
-            <div class="options-grid" id="paymentOptions"></div>
-            <div class="bank-grid hidden" id="bankGrid"></div>
+  <div class="options-grid" id="paymentOptions"></div>
+  <div class="bank-grid hidden" id="bankGrid"></div>
 
-            <div class="field">
-              <label for="orderNotes">Observaciones o comentarios</label>
-              <textarea class="textarea" id="orderNotes" placeholder="Opcional. Escríbenos aquí si necesitas aclarar algo importante sobre tu pedido."></textarea>
-              <p class="field-help">Opcional. No es necesario llenar este campo para confirmar.</p>
-            </div>
+  <div class="product-mini-summary" id="finalProductSummary"></div>
 
-            <div class="summary-card">
-              <strong>Resumen del pedido</strong>
-              <div class="summary-list" id="checkoutSummary"></div>
-            </div>
+  <div class="summary-card">
+    <strong>Resumen del pedido</strong>
+    <div class="summary-list" id="checkoutSummary"></div>
+  </div>
 
-            <div class="micro-status" id="step4Status"></div>
-          </div>
+  <div class="field">
+    <label for="orderNotes">Observaciones o comentarios</label>
+    <textarea class="textarea" id="orderNotes" placeholder="Opcional. Escríbenos aquí si necesitas aclarar algo importante sobre tu pedido."></textarea>
+  </div>
+
+  <div class="micro-status" id="step4Status"></div>
+</div>
 
           <div class="checkout-footer">
             <button class="ghost-soft" id="step4Back" type="button">Retroceder</button>
@@ -2870,7 +2938,7 @@ function renderCartBar() {
       });
     }
 
-   function renderFinalProductSummary() {
+  function renderFinalProductSummary() {
   const lines = getCartLines();
 
   if (!lines.length) {
@@ -2878,28 +2946,25 @@ function renderCartBar() {
     return;
   }
 
-  const modeLabel = state.checkout.mode === "delivery"
-    ? "Entrega"
-    : state.checkout.mode === "pickup"
-      ? "Retiro"
-      : "Modalidad pendiente";
-
-  const productList = lines.map(line => `
-    <span>${line.product.shortName} x${line.quantity} · ${money(line.subtotal)}</span>
+  const productCards = lines.map(line => `
+    <div class="selected-product-card">
+      ${imageHtml(line.product.coverImage, line.product.shortName)}
+      <div class="selected-product-info">
+        <strong>${line.product.shortName}</strong>
+        <span>Precio: ${money(line.unitPrice)}</span>
+        <span>Cantidad: ${line.quantity}</span>
+        <span class="selected-product-total">Total: ${money(line.subtotal)}</span>
+      </div>
+    </div>
   `).join("");
 
   el.finalProductSummary.innerHTML = `
-    ${imageHtml(lines[0].product.coverImage, lines[0].product.shortName)}
-    <div>
-      <strong>Productos seleccionados</strong>
-      ${productList}
-      <span>Total: ${money(getCartTotal())} + envío</span>
-      <span>${state.checkout.dateLabel || "Fecha pendiente"}</span>
-      <span>${state.checkout.slotLabel || "Horario pendiente"} · ${modeLabel}</span>
+    <p class="product-mini-summary-title">Productos seleccionados</p>
+    <div class="selected-products-list">
+      ${productCards}
     </div>
   `;
 }
-
     function renderCheckoutSummary() {
       const payment = CONFIG.paymentMethods.find(method => method.id === state.checkout.paymentMethod);
       const paymentLabel = payment ? payment.label : "Pendiente";
