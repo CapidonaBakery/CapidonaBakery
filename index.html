@@ -1684,6 +1684,84 @@
   color: var(--brown-strong) !important;
   font-weight: 900 !important;
 }
+
+/* =========================
+   AJUSTE VISUAL BANCOS
+   ========================= */
+
+.bank-card {
+  background: linear-gradient(180deg, #fffaf7 0%, #fff5ef 100%);
+  border: 1px dashed var(--line-strong);
+  box-shadow: none;
+}
+
+.bank-card strong {
+  color: var(--brown-strong);
+}
+
+.bank-card p {
+  color: var(--muted);
+}
+
+.bank-card .copy-btn {
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  color: var(--brown-strong);
+  box-shadow: 0 6px 14px rgba(95, 61, 50, 0.06);
+}
+
+    /* =========================
+   PRODUCTOS DENTRO DEL RESUMEN
+   ========================= */
+
+.summary-products-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.summary-product-card {
+  display: grid;
+  grid-template-columns: 50px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 8px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--bg-soft);
+}
+
+.summary-product-card img {
+  width: 50px;
+  height: 50px;
+  border-radius: 13px;
+  object-fit: cover;
+  background: var(--surface-2);
+}
+
+.summary-product-info strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--brown-strong);
+  font-size: .86rem;
+  line-height: 1.15;
+  font-weight: 900;
+}
+
+.summary-product-info span {
+  display: block;
+  color: var(--muted);
+  font-size: .78rem;
+  line-height: 1.25;
+  font-weight: 700;
+}
+
+.summary-product-info .summary-product-total {
+  margin-top: 3px;
+  color: var(--brown-strong);
+  font-weight: 900;
+}
     
   </style>
 </head>
@@ -1835,8 +1913,6 @@
           <div class="step-content">
   <div class="options-grid" id="paymentOptions"></div>
   <div class="bank-grid hidden" id="bankGrid"></div>
-
-  <div class="product-mini-summary" id="finalProductSummary"></div>
 
   <div class="summary-card">
     <strong>Resumen del pedido</strong>
@@ -2939,75 +3015,70 @@ function renderCartBar() {
     }
 
   function renderFinalProductSummary() {
-  const lines = getCartLines();
+  return;
+}
+    function renderCheckoutSummary() {
+  const payment = CONFIG.paymentMethods.find(method => method.id === state.checkout.paymentMethod);
+  const paymentLabel = payment ? payment.label : "Pendiente";
 
-  if (!lines.length) {
-    el.finalProductSummary.innerHTML = "";
-    return;
-  }
+  const modeLabel = state.checkout.mode === "delivery"
+    ? "Entrega"
+    : state.checkout.mode === "pickup"
+      ? "Retiro"
+      : "Pendiente";
 
-  const productCards = lines.map(line => `
-    <div class="selected-product-card">
+  const zoneLine = state.checkout.mode === "delivery" ? `
+    <div class="summary-row">
+      <span class="key">Lugar</span>
+      <span>${state.checkout.zone || "Pendiente"}</span>
+    </div>
+  ` : "";
+
+  const productCards = getCartLines().map(line => `
+    <div class="summary-product-card">
       ${imageHtml(line.product.coverImage, line.product.shortName)}
-      <div class="selected-product-info">
+      <div class="summary-product-info">
         <strong>${line.product.shortName}</strong>
         <span>Precio: ${money(line.unitPrice)}</span>
         <span>Cantidad: ${line.quantity}</span>
-        <span class="selected-product-total">Total: ${money(line.subtotal)}</span>
+        <span class="summary-product-total">Total: ${money(line.subtotal)}</span>
       </div>
     </div>
   `).join("");
 
-  el.finalProductSummary.innerHTML = `
-    <p class="product-mini-summary-title">Productos seleccionados</p>
-    <div class="selected-products-list">
+  el.checkoutSummary.innerHTML = `
+    <div class="summary-products-list">
       ${productCards}
+    </div>
+
+    <div class="summary-row">
+      <span class="key">Fecha</span>
+      <span>${state.checkout.dateLabel || "Pendiente"}</span>
+    </div>
+
+    <div class="summary-row">
+      <span class="key">Horario</span>
+      <span>${state.checkout.slotLabel || "Pendiente"}</span>
+    </div>
+
+    <div class="summary-row">
+      <span class="key">Modalidad</span>
+      <span>${modeLabel}</span>
+    </div>
+
+    ${zoneLine}
+
+    <div class="summary-row">
+      <span class="key">Pago</span>
+      <span>${paymentLabel}</span>
+    </div>
+
+    <div class="summary-row total">
+      <span>Total</span>
+      <span>${money(getCartTotal())} + envío</span>
     </div>
   `;
 }
-    function renderCheckoutSummary() {
-      const payment = CONFIG.paymentMethods.find(method => method.id === state.checkout.paymentMethod);
-      const paymentLabel = payment ? payment.label : "Pendiente";
-      const modeLabel = state.checkout.mode === "delivery" ? "Entrega" : state.checkout.mode === "pickup" ? "Retiro" : "Pendiente";
-      const zoneLine = state.checkout.mode === "delivery" ? `
-        <div class="summary-row">
-          <span class="key">Lugar</span>
-          <span>${state.checkout.zone || "Pendiente"}</span>
-        </div>
-      ` : "";
-
-      const productLine = getCartLines()
-  .map(line => `${line.product.shortName} (${pluralizeUnits(line.quantity)})`)
-  .join(", ") || "Pendiente";
-
-      el.checkoutSummary.innerHTML = `
-        <div class="summary-row">
-          <span class="key">Producto</span>
-          <span>${productLine}</span>
-        </div>
-        <div class="summary-row">
-          <span class="key">Fecha</span>
-          <span>${state.checkout.dateLabel || "Pendiente"}</span>
-        </div>
-        <div class="summary-row">
-          <span class="key">Horario</span>
-          <span>${state.checkout.slotLabel || "Pendiente"}</span>
-        </div>
-        <div class="summary-row">
-          <span class="key">Modalidad</span>
-          <span>${modeLabel}</span>
-        </div>
-        ${zoneLine}
-        <div class="summary-row">
-          <span class="key">Pago</span>
-          <span>${paymentLabel}</span>
-        </div>
-        <div class="summary-row total">
-          <span>Total</span>
-          <span>${money(getCartTotal())} + envío</span>
-        </div>
-      `;
-    }
 
     function renderSteps() {
       $$(".step-panel").forEach(panel => {
